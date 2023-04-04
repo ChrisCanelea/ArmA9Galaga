@@ -155,6 +155,7 @@ int main(void)
     drawRect(platform);
     drawObject(player);
     drawObject(bossGalaga);
+    drawObject(goeiGalaga);
 
     *frontBuffAddr = 1;
     wait_for_vsync(status, frontBuffAddr);
@@ -190,6 +191,7 @@ int main(void)
         
         drawObject(player);
         drawObject(bossGalaga);
+        drawObject(goeiGalaga);
 
         // if ((square.bottom >= platform.top)/* && (square.right >= platform.left) && (square.left <= platform.right)*/) {
         //     square.dy = 0;
@@ -326,8 +328,8 @@ void initializeGoeiGalaga(gameObject* object) {
                                {    0,      0,    RED,   RED,   RED,      0,   BLUE,   BLUE,   BLUE,      0,   RED,   RED,     RED,      0,     0},
                                {    0,      0,      0,     0,   RED,      0,      0,      0,      0,      0,   RED,     0,       0,      0,     0},
                                {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               { CYAN, ORANGE,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN, ORANGE,  CYAN},
-                               {    0,   CYAN,   CYAN,     0,     0,      0,      0,      0,      0,      0,     0,     0,    CYAN,   CYAN,     0}
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0}
     };
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
