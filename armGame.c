@@ -313,7 +313,7 @@ void initializeBossGalaga(gameObject* object) {
 
 void initializeGoeiGalaga(gameObject* object) {
     short int array[16][15] = {{    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0}
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
                                {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
                                {    0,      0,      0,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,       0,      0,     0},
                                {    0,    RED,    RED,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,     RED,    RED,     0},
