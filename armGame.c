@@ -15,16 +15,20 @@
 #define CHAR_BUF_CTRL_BASE    0xFF203030
 
 /* VGA colors */
-#define WHITE 0xFFFF
+//#define WHITE 0xFFFF
+#define WHITE 0xDEFB
 #define YELLOW 0xFFE0
 #define RED 0xF800
 #define GREEN 0x07E0
-#define BLUE 0x001F
-#define CYAN 0x07FF
+//#define BLUE 0x001F
+#define BLUE 0x035B
+//#define CYAN 0x07FF
+#define CYAN 0x04B2
 #define MAGENTA 0xF81F
 #define GREY 0xC618
 #define PINK 0xFC18
-#define ORANGE 0xFC00
+//#define ORANGE 0xFC00
+#define ORANGE 0xDA20
 
 #define ABS(x) (((x) > 0) ? (x) : -(x))
 
@@ -67,7 +71,7 @@ typedef struct gameObject
     int length;
     int height;
     rect hitbox;
-    short int sprite[8][16][15];
+    short int sprite[8][16][16];
 } gameObject;
 
 //basic functions
@@ -135,16 +139,20 @@ int main(void)
     clear_screen(); // pixel_buffer_start points to the pixel buffer
 
     //initialize player object
-    gameObject player = createObject(15, 16);
+    gameObject player = createObject(16, 16);
     initializePlayer(&player);
 
-    gameObject bossGalaga = createObject(15, 16);
+    gameObject bossGalaga = createObject(16, 16);
     initializeBossGalaga(&bossGalaga);
     setObjectPos(&bossGalaga, 20, 0);
     
-    gameObject goeiGalaga = createObject(15, 16);
+    gameObject goeiGalaga = createObject(16, 16);
     initializeGoeiGalaga(&goeiGalaga);
     setObjectPos(&goeiGalaga, 40, 0);
+
+    gameObject bossGalaga2 = createObject(16, 16);
+    initializeBossGalaga(&bossGalaga2);
+    setObjectPos(&bossGalaga2, 60, 0);
 
     //initialize and draw a rect
     rect square = createRect(20, 20, 20, 20, YELLOW);
@@ -158,6 +166,7 @@ int main(void)
     drawObject(player, 1);
     drawObject(bossGalaga, 1);
     drawObject(goeiGalaga, 1);
+    drawObject(bossGalaga2, 2);
 
     *frontBuffAddr = 1;
     wait_for_vsync(status, frontBuffAddr);
@@ -195,6 +204,7 @@ int main(void)
         setObjectPos(&bossGalaga, 20, 0);
         drawObject(bossGalaga, (timer/10)%2);
         drawObject(goeiGalaga, 1);
+        drawObject(bossGalaga2, 2);
 
         // if ((square.bottom >= platform.top)/* && (square.right >= platform.left) && (square.left <= platform.right)*/) {
         //     square.dy = 0;
@@ -287,22 +297,22 @@ void initializePlayer(gameObject* object)
     }
     
     //1st sprite (complete)
-    short int array1[16][15] = {{    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
-                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
-                                {    0,     0,     0, WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE,     0, WHITE,       0,     0,     0},
-                                {  RED,     0,     0, WHITE,  BLUE, WHITE, WHITE,   RED, WHITE, WHITE,  BLUE, WHITE,       0,     0,   RED},
-                                {  RED,     0,     0,  BLUE, WHITE, WHITE,   RED,   RED,   RED, WHITE, WHITE,  BLUE,       0,     0,   RED},
-                                {WHITE,     0,     0, WHITE, WHITE, WHITE,   RED, WHITE,   RED, WHITE, WHITE,  WHITE,      0,     0, WHITE},
-                                {WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE,  WHITE,  WHITE,     0, WHITE},
-                                {WHITE, WHITE, WHITE, WHITE, WHITE,   RED, WHITE, WHITE, WHITE,   RED, WHITE,  WHITE,  WHITE, WHITE, WHITE},
-                                {WHITE, WHITE, WHITE,     0,   RED,   RED, WHITE, WHITE, WHITE,   RED,   RED,      0,  WHITE, WHITE, WHITE},
-                                {WHITE, WHITE,     0,     0,   RED,   RED,     0, WHITE,     0,   RED,   RED,      0,      0, WHITE, WHITE},
-                                {WHITE,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,      0,      0,     0, WHITE}
+    short int array1[16][16] = {{    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0,     0},
+                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0,     0},
+                                {    0,     0,     0, WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE,     0, WHITE,       0,     0,     0,     0},
+                                {  RED,     0,     0, WHITE,  BLUE, WHITE, WHITE,   RED, WHITE, WHITE,  BLUE, WHITE,       0,     0,   RED,     0},
+                                {  RED,     0,     0,  BLUE, WHITE, WHITE,   RED,   RED,   RED, WHITE, WHITE,  BLUE,       0,     0,   RED,     0},
+                                {WHITE,     0,     0, WHITE, WHITE, WHITE,   RED, WHITE,   RED, WHITE, WHITE,  WHITE,      0,     0, WHITE,     0},
+                                {WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE,  WHITE,  WHITE,     0, WHITE,     0},
+                                {WHITE, WHITE, WHITE, WHITE, WHITE,   RED, WHITE, WHITE, WHITE,   RED, WHITE,  WHITE,  WHITE, WHITE, WHITE,     0},
+                                {WHITE, WHITE, WHITE,     0,   RED,   RED, WHITE, WHITE, WHITE,   RED,   RED,      0,  WHITE, WHITE, WHITE,     0},
+                                {WHITE, WHITE,     0,     0,   RED,   RED,     0, WHITE,     0,   RED,   RED,      0,      0, WHITE, WHITE,     0},
+                                {WHITE,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,      0,      0,     0, WHITE,     0}
     };
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
@@ -310,22 +320,22 @@ void initializePlayer(gameObject* object)
         }
     }
     //2nd sprite (incomplete)
-    short int array2[16][15] = {{    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
-                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
-                                {    0,     0,     0, WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE,     0, WHITE,       0,     0,     0},
-                                {  RED,     0,     0, WHITE,  BLUE, WHITE, WHITE,   RED, WHITE, WHITE,  BLUE, WHITE,       0,     0,   RED},
-                                {  RED,     0,     0,  BLUE, WHITE, WHITE,   RED,   RED,   RED, WHITE, WHITE,  BLUE,       0,     0,   RED},
-                                {WHITE,     0,     0, WHITE, WHITE, WHITE,   RED, WHITE,   RED, WHITE, WHITE,  WHITE,      0,     0, WHITE},
-                                {WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE,  WHITE,  WHITE,     0, WHITE},
-                                {WHITE, WHITE, WHITE, WHITE, WHITE,   RED, WHITE, WHITE, WHITE,   RED, WHITE,  WHITE,  WHITE, WHITE, WHITE},
-                                {WHITE, WHITE, WHITE,     0,   RED,   RED, WHITE, WHITE, WHITE,   RED,   RED,      0,  WHITE, WHITE, WHITE},
-                                {WHITE, WHITE,     0,     0,   RED,   RED,     0, WHITE,     0,   RED,   RED,      0,      0, WHITE, WHITE},
-                                {WHITE,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,      0,      0,     0, WHITE}
+    short int array2[16][16] = {{    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0,     0},
+                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0,     0},
+                                {    0,     0,     0, WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE,     0, WHITE,       0,     0,     0,     0},
+                                {  RED,     0,     0, WHITE,  BLUE, WHITE, WHITE,   RED, WHITE, WHITE,  BLUE, WHITE,       0,     0,   RED,     0},
+                                {  RED,     0,     0,  BLUE, WHITE, WHITE,   RED,   RED,   RED, WHITE, WHITE,  BLUE,       0,     0,   RED,     0},
+                                {WHITE,     0,     0, WHITE, WHITE, WHITE,   RED, WHITE,   RED, WHITE, WHITE,  WHITE,      0,     0, WHITE,     0},
+                                {WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE,  WHITE,  WHITE,     0, WHITE,     0},
+                                {WHITE, WHITE, WHITE, WHITE, WHITE,   RED, WHITE, WHITE, WHITE,   RED, WHITE,  WHITE,  WHITE, WHITE, WHITE,     0},
+                                {WHITE, WHITE, WHITE,     0,   RED,   RED, WHITE, WHITE, WHITE,   RED,   RED,      0,  WHITE, WHITE, WHITE,     0},
+                                {WHITE, WHITE,     0,     0,   RED,   RED,     0, WHITE,     0,   RED,   RED,      0,      0, WHITE, WHITE,     0},
+                                {WHITE,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,      0,      0,     0, WHITE,     0}
     };
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
@@ -333,22 +343,22 @@ void initializePlayer(gameObject* object)
         }
     }
     //3rd sprite (incomplete)
-    short int array3[16][15] = {{    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
-                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
-                                {    0,     0,     0, WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE,     0, WHITE,       0,     0,     0},
-                                {  RED,     0,     0, WHITE,  BLUE, WHITE, WHITE,   RED, WHITE, WHITE,  BLUE, WHITE,       0,     0,   RED},
-                                {  RED,     0,     0,  BLUE, WHITE, WHITE,   RED,   RED,   RED, WHITE, WHITE,  BLUE,       0,     0,   RED},
-                                {WHITE,     0,     0, WHITE, WHITE, WHITE,   RED, WHITE,   RED, WHITE, WHITE,  WHITE,      0,     0, WHITE},
-                                {WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE,  WHITE,  WHITE,     0, WHITE},
-                                {WHITE, WHITE, WHITE, WHITE, WHITE,   RED, WHITE, WHITE, WHITE,   RED, WHITE,  WHITE,  WHITE, WHITE, WHITE},
-                                {WHITE, WHITE, WHITE,     0,   RED,   RED, WHITE, WHITE, WHITE,   RED,   RED,      0,  WHITE, WHITE, WHITE},
-                                {WHITE, WHITE,     0,     0,   RED,   RED,     0, WHITE,     0,   RED,   RED,      0,      0, WHITE, WHITE},
-                                {WHITE,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,      0,      0,     0, WHITE}
+    short int array3[16][16] = {{    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0,     0},
+                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0,     0},
+                                {    0,     0,     0, WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE,     0, WHITE,       0,     0,     0,     0},
+                                {  RED,     0,     0, WHITE,  BLUE, WHITE, WHITE,   RED, WHITE, WHITE,  BLUE, WHITE,       0,     0,   RED,     0},
+                                {  RED,     0,     0,  BLUE, WHITE, WHITE,   RED,   RED,   RED, WHITE, WHITE,  BLUE,       0,     0,   RED,     0},
+                                {WHITE,     0,     0, WHITE, WHITE, WHITE,   RED, WHITE,   RED, WHITE, WHITE,  WHITE,      0,     0, WHITE,     0},
+                                {WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE,  WHITE,  WHITE,     0, WHITE,     0},
+                                {WHITE, WHITE, WHITE, WHITE, WHITE,   RED, WHITE, WHITE, WHITE,   RED, WHITE,  WHITE,  WHITE, WHITE, WHITE,     0},
+                                {WHITE, WHITE, WHITE,     0,   RED,   RED, WHITE, WHITE, WHITE,   RED,   RED,      0,  WHITE, WHITE, WHITE,     0},
+                                {WHITE, WHITE,     0,     0,   RED,   RED,     0, WHITE,     0,   RED,   RED,      0,      0, WHITE, WHITE,     0},
+                                {WHITE,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,      0,      0,     0, WHITE,     0}
     };
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
@@ -356,22 +366,22 @@ void initializePlayer(gameObject* object)
         }
     }
     //4th sprite (incomplete)
-    short int array4[16][15] = {{    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
-                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
-                                {    0,     0,     0, WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE,     0, WHITE,       0,     0,     0},
-                                {  RED,     0,     0, WHITE,  BLUE, WHITE, WHITE,   RED, WHITE, WHITE,  BLUE, WHITE,       0,     0,   RED},
-                                {  RED,     0,     0,  BLUE, WHITE, WHITE,   RED,   RED,   RED, WHITE, WHITE,  BLUE,       0,     0,   RED},
-                                {WHITE,     0,     0, WHITE, WHITE, WHITE,   RED, WHITE,   RED, WHITE, WHITE,  WHITE,      0,     0, WHITE},
-                                {WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE,  WHITE,  WHITE,     0, WHITE},
-                                {WHITE, WHITE, WHITE, WHITE, WHITE,   RED, WHITE, WHITE, WHITE,   RED, WHITE,  WHITE,  WHITE, WHITE, WHITE},
-                                {WHITE, WHITE, WHITE,     0,   RED,   RED, WHITE, WHITE, WHITE,   RED,   RED,      0,  WHITE, WHITE, WHITE},
-                                {WHITE, WHITE,     0,     0,   RED,   RED,     0, WHITE,     0,   RED,   RED,      0,      0, WHITE, WHITE},
-                                {WHITE,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,      0,      0,     0, WHITE}
+    short int array4[16][16] = {{    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0,     0},
+                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0,     0},
+                                {    0,     0,     0, WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE,     0, WHITE,       0,     0,     0,     0},
+                                {  RED,     0,     0, WHITE,  BLUE, WHITE, WHITE,   RED, WHITE, WHITE,  BLUE, WHITE,       0,     0,   RED,     0},
+                                {  RED,     0,     0,  BLUE, WHITE, WHITE,   RED,   RED,   RED, WHITE, WHITE,  BLUE,       0,     0,   RED,     0},
+                                {WHITE,     0,     0, WHITE, WHITE, WHITE,   RED, WHITE,   RED, WHITE, WHITE,  WHITE,      0,     0, WHITE,     0},
+                                {WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE,  WHITE,  WHITE,     0, WHITE,     0},
+                                {WHITE, WHITE, WHITE, WHITE, WHITE,   RED, WHITE, WHITE, WHITE,   RED, WHITE,  WHITE,  WHITE, WHITE, WHITE,     0},
+                                {WHITE, WHITE, WHITE,     0,   RED,   RED, WHITE, WHITE, WHITE,   RED,   RED,      0,  WHITE, WHITE, WHITE,     0},
+                                {WHITE, WHITE,     0,     0,   RED,   RED,     0, WHITE,     0,   RED,   RED,      0,      0, WHITE, WHITE,     0},
+                                {WHITE,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,      0,      0,     0, WHITE,     0}
     };
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
@@ -379,22 +389,22 @@ void initializePlayer(gameObject* object)
         }
     }
     //5th sprite (incomplete)
-    short int array5[16][15] = {{    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
-                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
-                                {    0,     0,     0, WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE,     0, WHITE,       0,     0,     0},
-                                {  RED,     0,     0, WHITE,  BLUE, WHITE, WHITE,   RED, WHITE, WHITE,  BLUE, WHITE,       0,     0,   RED},
-                                {  RED,     0,     0,  BLUE, WHITE, WHITE,   RED,   RED,   RED, WHITE, WHITE,  BLUE,       0,     0,   RED},
-                                {WHITE,     0,     0, WHITE, WHITE, WHITE,   RED, WHITE,   RED, WHITE, WHITE,  WHITE,      0,     0, WHITE},
-                                {WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE,  WHITE,  WHITE,     0, WHITE},
-                                {WHITE, WHITE, WHITE, WHITE, WHITE,   RED, WHITE, WHITE, WHITE,   RED, WHITE,  WHITE,  WHITE, WHITE, WHITE},
-                                {WHITE, WHITE, WHITE,     0,   RED,   RED, WHITE, WHITE, WHITE,   RED,   RED,      0,  WHITE, WHITE, WHITE},
-                                {WHITE, WHITE,     0,     0,   RED,   RED,     0, WHITE,     0,   RED,   RED,      0,      0, WHITE, WHITE},
-                                {WHITE,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,      0,      0,     0, WHITE}
+    short int array5[16][16] = {{    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0,     0},
+                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0,     0},
+                                {    0,     0,     0, WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE,     0, WHITE,       0,     0,     0,     0},
+                                {  RED,     0,     0, WHITE,  BLUE, WHITE, WHITE,   RED, WHITE, WHITE,  BLUE, WHITE,       0,     0,   RED,     0},
+                                {  RED,     0,     0,  BLUE, WHITE, WHITE,   RED,   RED,   RED, WHITE, WHITE,  BLUE,       0,     0,   RED,     0},
+                                {WHITE,     0,     0, WHITE, WHITE, WHITE,   RED, WHITE,   RED, WHITE, WHITE,  WHITE,      0,     0, WHITE,     0},
+                                {WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE,  WHITE,  WHITE,     0, WHITE,     0},
+                                {WHITE, WHITE, WHITE, WHITE, WHITE,   RED, WHITE, WHITE, WHITE,   RED, WHITE,  WHITE,  WHITE, WHITE, WHITE,     0},
+                                {WHITE, WHITE, WHITE,     0,   RED,   RED, WHITE, WHITE, WHITE,   RED,   RED,      0,  WHITE, WHITE, WHITE,     0},
+                                {WHITE, WHITE,     0,     0,   RED,   RED,     0, WHITE,     0,   RED,   RED,      0,      0, WHITE, WHITE,     0},
+                                {WHITE,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,      0,      0,     0, WHITE,     0}
     };
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
@@ -402,22 +412,22 @@ void initializePlayer(gameObject* object)
         }
     }
     //6th sprite (incomplete)
-    short int array6[16][15] = {{    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
-                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
-                                {    0,     0,     0, WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE,     0, WHITE,       0,     0,     0},
-                                {  RED,     0,     0, WHITE,  BLUE, WHITE, WHITE,   RED, WHITE, WHITE,  BLUE, WHITE,       0,     0,   RED},
-                                {  RED,     0,     0,  BLUE, WHITE, WHITE,   RED,   RED,   RED, WHITE, WHITE,  BLUE,       0,     0,   RED},
-                                {WHITE,     0,     0, WHITE, WHITE, WHITE,   RED, WHITE,   RED, WHITE, WHITE,  WHITE,      0,     0, WHITE},
-                                {WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE,  WHITE,  WHITE,     0, WHITE},
-                                {WHITE, WHITE, WHITE, WHITE, WHITE,   RED, WHITE, WHITE, WHITE,   RED, WHITE,  WHITE,  WHITE, WHITE, WHITE},
-                                {WHITE, WHITE, WHITE,     0,   RED,   RED, WHITE, WHITE, WHITE,   RED,   RED,      0,  WHITE, WHITE, WHITE},
-                                {WHITE, WHITE,     0,     0,   RED,   RED,     0, WHITE,     0,   RED,   RED,      0,      0, WHITE, WHITE},
-                                {WHITE,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,      0,      0,     0, WHITE}
+    short int array6[16][16] = {{    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0,     0},
+                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0,     0},
+                                {    0,     0,     0, WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE,     0, WHITE,       0,     0,     0,     0},
+                                {  RED,     0,     0, WHITE,  BLUE, WHITE, WHITE,   RED, WHITE, WHITE,  BLUE, WHITE,       0,     0,   RED,     0},
+                                {  RED,     0,     0,  BLUE, WHITE, WHITE,   RED,   RED,   RED, WHITE, WHITE,  BLUE,       0,     0,   RED,     0},
+                                {WHITE,     0,     0, WHITE, WHITE, WHITE,   RED, WHITE,   RED, WHITE, WHITE,  WHITE,      0,     0, WHITE,     0},
+                                {WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE,  WHITE,  WHITE,     0, WHITE,     0},
+                                {WHITE, WHITE, WHITE, WHITE, WHITE,   RED, WHITE, WHITE, WHITE,   RED, WHITE,  WHITE,  WHITE, WHITE, WHITE,     0},
+                                {WHITE, WHITE, WHITE,     0,   RED,   RED, WHITE, WHITE, WHITE,   RED,   RED,      0,  WHITE, WHITE, WHITE,     0},
+                                {WHITE, WHITE,     0,     0,   RED,   RED,     0, WHITE,     0,   RED,   RED,      0,      0, WHITE, WHITE,     0},
+                                {WHITE,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,      0,      0,     0, WHITE,     0}
     };
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
@@ -425,22 +435,22 @@ void initializePlayer(gameObject* object)
         }
     }
     //7th sprite (incomplete)
-    short int array7[16][15] = {{    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
-                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
-                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
-                                {    0,     0,     0, WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE,     0, WHITE,       0,     0,     0},
-                                {  RED,     0,     0, WHITE,  BLUE, WHITE, WHITE,   RED, WHITE, WHITE,  BLUE, WHITE,       0,     0,   RED},
-                                {  RED,     0,     0,  BLUE, WHITE, WHITE,   RED,   RED,   RED, WHITE, WHITE,  BLUE,       0,     0,   RED},
-                                {WHITE,     0,     0, WHITE, WHITE, WHITE,   RED, WHITE,   RED, WHITE, WHITE,  WHITE,      0,     0, WHITE},
-                                {WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE,  WHITE,  WHITE,     0, WHITE},
-                                {WHITE, WHITE, WHITE, WHITE, WHITE,   RED, WHITE, WHITE, WHITE,   RED, WHITE,  WHITE,  WHITE, WHITE, WHITE},
-                                {WHITE, WHITE, WHITE,     0,   RED,   RED, WHITE, WHITE, WHITE,   RED,   RED,      0,  WHITE, WHITE, WHITE},
-                                {WHITE, WHITE,     0,     0,   RED,   RED,     0, WHITE,     0,   RED,   RED,      0,      0, WHITE, WHITE},
-                                {WHITE,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,      0,      0,     0, WHITE}
+    short int array7[16][16] = {{    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0,     0},
+                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0,     0},
+                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0,     0},
+                                {    0,     0,     0, WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE,     0, WHITE,       0,     0,     0,     0},
+                                {  RED,     0,     0, WHITE,  BLUE, WHITE, WHITE,   RED, WHITE, WHITE,  BLUE, WHITE,       0,     0,   RED,     0},
+                                {  RED,     0,     0,  BLUE, WHITE, WHITE,   RED,   RED,   RED, WHITE, WHITE,  BLUE,       0,     0,   RED,     0},
+                                {WHITE,     0,     0, WHITE, WHITE, WHITE,   RED, WHITE,   RED, WHITE, WHITE,  WHITE,      0,     0, WHITE,     0},
+                                {WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE,  WHITE,  WHITE,     0, WHITE,     0},
+                                {WHITE, WHITE, WHITE, WHITE, WHITE,   RED, WHITE, WHITE, WHITE,   RED, WHITE,  WHITE,  WHITE, WHITE, WHITE,     0},
+                                {WHITE, WHITE, WHITE,     0,   RED,   RED, WHITE, WHITE, WHITE,   RED,   RED,      0,  WHITE, WHITE, WHITE,     0},
+                                {WHITE, WHITE,     0,     0,   RED,   RED,     0, WHITE,     0,   RED,   RED,      0,      0, WHITE, WHITE,     0},
+                                {WHITE,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,      0,      0,     0, WHITE,     0}
     };
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
@@ -451,23 +461,23 @@ void initializePlayer(gameObject* object)
 
 void initializeBossGalaga(gameObject* object)
 {   
-    //0th sprite (incomplete)
-    short int array0[16][15] = {{    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                                {    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
-                                {    0,      0,      0,  CYAN,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,  CYAN,       0,      0,     0},
-                                {    0,      0,      0,     0,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,     0,       0,      0,     0},
-                                {    0,      0,      0,     0,     0,   CYAN,   CYAN,   CYAN,   CYAN,   CYAN,     0,     0,       0,      0,     0},
-                                {    0,      0,      0,  CYAN,  CYAN, YELLOW, YELLOW,   CYAN, YELLOW, YELLOW,  CYAN,  CYAN,       0,      0,     0},
-                                {    0,      0,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,      0,     0},
-                                { CYAN,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,  CYAN},
-                                {    0,   CYAN,   CYAN,  CYAN,     0, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,     0,  CYAN,    CYAN,   CYAN,     0},
-                                {    0,      0,   CYAN,  CYAN,     0,      0, ORANGE,      0, ORANGE,      0,     0,  CYAN,    CYAN,      0,     0},
-                                {    0,      0,   CYAN,  CYAN,     0,      0, ORANGE,      0, ORANGE,      0,     0,  CYAN,    CYAN,      0,     0},
-                                {    0,      0,   CYAN,  CYAN,  CYAN,      0,      0,      0,      0,      0,  CYAN,  CYAN,    CYAN,      0,     0},
-                                {    0,      0,      0,  CYAN,  CYAN,      0,      0,      0,      0,      0,  CYAN,  CYAN,       0,      0,     0},
-                                {    0,      0,      0,     0,  CYAN,   CYAN,      0,      0,      0,   CYAN,  CYAN,     0,       0,      0,     0},
-                                {    0,      0,      0,     0,     0,   CYAN,   CYAN,      0,   CYAN,   CYAN,     0,     0,       0,      0,     0},
-                                {    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0}
+    //0th sprite (complete)
+    short int array0[16][16] = {{    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,  CYAN,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,  CYAN,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,   CYAN,   CYAN,   CYAN,   CYAN,   CYAN,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,  CYAN,  CYAN, YELLOW, YELLOW,   CYAN, YELLOW, YELLOW,  CYAN,  CYAN,       0,      0,     0},
+                                {    0,      0,      0,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,      0,     0},
+                                {    0,   CYAN,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,  CYAN},
+                                {    0,      0,   CYAN,   CYAN,  CYAN,     0, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,     0,  CYAN,    CYAN,   CYAN,     0},
+                                {    0,      0,      0,   CYAN,  CYAN,     0,      0, ORANGE,      0, ORANGE,      0,     0,  CYAN,    CYAN,      0,     0},
+                                {    0,      0,      0,   CYAN,  CYAN,     0,      0, ORANGE,      0, ORANGE,      0,     0,  CYAN,    CYAN,      0,     0},
+                                {    0,      0,      0,   CYAN,  CYAN,  CYAN,      0,      0,      0,      0,      0,  CYAN,  CYAN,    CYAN,      0,     0},
+                                {    0,      0,      0,      0,  CYAN,  CYAN,      0,      0,      0,      0,      0,  CYAN,  CYAN,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,  CYAN,   CYAN,      0,      0,      0,   CYAN,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,   CYAN,   CYAN,      0,   CYAN,   CYAN,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0}
     };
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
@@ -475,45 +485,45 @@ void initializeBossGalaga(gameObject* object)
         }
     }
     //1st sprite (complete)
-    short int array1[16][15] = {{    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
-                                {    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
-                                {    0,      0,      0,  CYAN,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,  CYAN,       0,      0,     0},
-                                {    0,      0,      0,     0,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,     0,       0,      0,     0},
-                                {    0,      0,      0,     0,     0,   CYAN,   CYAN,   CYAN,   CYAN,   CYAN,     0,     0,       0,      0,     0},
-                                {    0,      0,      0,     0,  CYAN, YELLOW, YELLOW,   CYAN, YELLOW, YELLOW,  CYAN,     0,       0,      0,     0},
-                                {    0,      0,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,      0,     0},
-                                { CYAN,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,  CYAN},
-                                {    0,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,     0},
-                                {    0,   CYAN, ORANGE,  CYAN,  CYAN,      0, ORANGE,      0, ORANGE,      0,  CYAN,  CYAN,  ORANGE,   CYAN,     0},
-                                { CYAN,   CYAN, ORANGE,  CYAN,     0,      0, ORANGE,      0, ORANGE,      0,     0,  CYAN,  ORANGE,   CYAN,  CYAN},
-                                { CYAN, ORANGE,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN, ORANGE,  CYAN},
-                                { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
-                                { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
-                                { CYAN,   CYAN,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN,   CYAN,  CYAN},
-                                {    0,   CYAN,   CYAN,     0,     0,      0,      0,      0,      0,      0,     0,     0,    CYAN,   CYAN,     0}
+    short int array1[16][16] = {{    0,      0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,  CYAN,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,  CYAN,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,   CYAN,   CYAN,   CYAN,   CYAN,   CYAN,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,  CYAN, YELLOW, YELLOW,   CYAN, YELLOW, YELLOW,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,      0,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,      0,     0},
+                                {    0,   CYAN,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,  CYAN},
+                                {    0,      0,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,     0},
+                                {    0,      0,   CYAN, ORANGE,  CYAN,  CYAN,      0, ORANGE,      0, ORANGE,      0,  CYAN,  CYAN,  ORANGE,   CYAN,     0},
+                                {    0,   CYAN,   CYAN, ORANGE,  CYAN,     0,      0, ORANGE,      0, ORANGE,      0,     0,  CYAN,  ORANGE,   CYAN,  CYAN},
+                                {    0,   CYAN, ORANGE,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN, ORANGE,  CYAN},
+                                {    0,   CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
+                                {    0,   CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
+                                {    0,   CYAN,   CYAN,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN,   CYAN,  CYAN},
+                                {    0,      0,   CYAN,   CYAN,     0,     0,      0,      0,      0,      0,      0,     0,     0,    CYAN,   CYAN,     0}
     };
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
             object->sprite[1][row][col] = array1[row][col];
         }
     }
-    //2nd sprite (incomplete)
-    short int array2[16][15] = {{    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
-                                {    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
-                                {    0,      0,      0,  CYAN,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,  CYAN,       0,      0,     0},
-                                {    0,      0,      0,     0,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,     0,       0,      0,     0},
-                                {    0,      0,      0,     0,     0,   CYAN,   CYAN,   CYAN,   CYAN,   CYAN,     0,     0,       0,      0,     0},
-                                {    0,      0,      0,     0,  CYAN, YELLOW, YELLOW,   CYAN, YELLOW, YELLOW,  CYAN,     0,       0,      0,     0},
-                                {    0,      0,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,      0,     0},
-                                { CYAN,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,  CYAN},
-                                {    0,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,     0},
-                                {    0,   CYAN, ORANGE,  CYAN,  CYAN,      0, ORANGE,      0, ORANGE,      0,  CYAN,  CYAN,  ORANGE,   CYAN,     0},
-                                { CYAN,   CYAN, ORANGE,  CYAN,     0,      0, ORANGE,      0, ORANGE,      0,     0,  CYAN,  ORANGE,   CYAN,  CYAN},
-                                { CYAN, ORANGE,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN, ORANGE,  CYAN},
-                                { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
-                                { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
-                                { CYAN,   CYAN,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN,   CYAN,  CYAN},
-                                {    0,   CYAN,   CYAN,     0,     0,      0,      0,      0,      0,      0,     0,     0,    CYAN,   CYAN,     0}
+    //2nd sprite (complete)
+    short int array2[16][16] = {{    0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,      0,      0,      0,   CYAN,      0,      0,   CYAN,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,      0,   CYAN,   CYAN, ORANGE, ORANGE,   CYAN,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,   CYAN,   CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,   CYAN,   CYAN, ORANGE,   CYAN,   CYAN,   CYAN,   CYAN,   CYAN,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,      0,   CYAN, YELLOW,   CYAN, YELLOW, YELLOW,   CYAN,  CYAN,  CYAN,       0,   CYAN,     0},
+                                {    0,      0,      0,   CYAN,   CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,   CYAN,  CYAN,  CYAN,    CYAN,      0,     0},
+                                {    0,      0,      0,   CYAN,   CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,     0,  CYAN,    CYAN,      0,     0},
+                                {    0,      0,   CYAN,   CYAN,   CYAN,   CYAN, YELLOW, YELLOW, YELLOW, YELLOW,      0,     0,  CYAN,    CYAN,      0,     0},
+                                {    0,   CYAN,   CYAN,   CYAN,   CYAN,      0, YELLOW, ORANGE,      0, ORANGE,      0,     0,  CYAN,    CYAN,      0,     0},
+                                {    0,      0,   CYAN,   CYAN,   CYAN,      0,      0, ORANGE,      0, ORANGE,      0,  CYAN,  CYAN,    CYAN,      0,     0},
+                                {    0,      0,      0,   CYAN,   CYAN,      0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN,      0,     0},
+                                {    0,      0,      0,   CYAN,   CYAN,   CYAN,   CYAN,      0,      0,      0,      0,  CYAN,  CYAN,       0,      0,     0},
+                                {    0,      0,      0,      0,      0,   CYAN,   CYAN,   CYAN,      0,      0,      0,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,      0,      0,   CYAN,   CYAN,   CYAN,      0,   CYAN,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,      0,      0,      0,      0,   CYAN,      0,      0,     0,     0,       0,      0,     0}
     };
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
@@ -521,22 +531,22 @@ void initializeBossGalaga(gameObject* object)
         }
     }
     //3rd sprite (incomplete)
-    short int array3[16][15] = {{    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
-                                {    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
-                                {    0,      0,      0,  CYAN,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,  CYAN,       0,      0,     0},
-                                {    0,      0,      0,     0,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,     0,       0,      0,     0},
-                                {    0,      0,      0,     0,     0,   CYAN,   CYAN,   CYAN,   CYAN,   CYAN,     0,     0,       0,      0,     0},
-                                {    0,      0,      0,     0,  CYAN, YELLOW, YELLOW,   CYAN, YELLOW, YELLOW,  CYAN,     0,       0,      0,     0},
-                                {    0,      0,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,      0,     0},
-                                { CYAN,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,  CYAN},
-                                {    0,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,     0},
-                                {    0,   CYAN, ORANGE,  CYAN,  CYAN,      0, ORANGE,      0, ORANGE,      0,  CYAN,  CYAN,  ORANGE,   CYAN,     0},
-                                { CYAN,   CYAN, ORANGE,  CYAN,     0,      0, ORANGE,      0, ORANGE,      0,     0,  CYAN,  ORANGE,   CYAN,  CYAN},
-                                { CYAN, ORANGE,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN, ORANGE,  CYAN},
-                                { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
-                                { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
-                                { CYAN,   CYAN,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN,   CYAN,  CYAN},
-                                {    0,   CYAN,   CYAN,     0,     0,      0,      0,      0,      0,      0,     0,     0,    CYAN,   CYAN,     0}
+    short int array3[16][16] = {{    0,      0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,  CYAN,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,  CYAN,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,   CYAN,   CYAN,   CYAN,   CYAN,   CYAN,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,  CYAN, YELLOW, YELLOW,   CYAN, YELLOW, YELLOW,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,      0,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,      0,     0},
+                                {    0,   CYAN,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,  CYAN},
+                                {    0,      0,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,     0},
+                                {    0,      0,   CYAN, ORANGE,  CYAN,  CYAN,      0, ORANGE,      0, ORANGE,      0,  CYAN,  CYAN,  ORANGE,   CYAN,     0},
+                                {    0,   CYAN,   CYAN, ORANGE,  CYAN,     0,      0, ORANGE,      0, ORANGE,      0,     0,  CYAN,  ORANGE,   CYAN,  CYAN},
+                                {    0,   CYAN, ORANGE,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN, ORANGE,  CYAN},
+                                {    0,   CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
+                                {    0,   CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
+                                {    0,   CYAN,   CYAN,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN,   CYAN,  CYAN},
+                                {    0,      0,   CYAN,   CYAN,     0,     0,      0,      0,      0,      0,      0,     0,     0,    CYAN,   CYAN,     0}
     };
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
@@ -544,22 +554,22 @@ void initializeBossGalaga(gameObject* object)
         }
     }
     //4th sprite (incomplete)
-    short int array4[16][15] = {{    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
-                                {    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
-                                {    0,      0,      0,  CYAN,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,  CYAN,       0,      0,     0},
-                                {    0,      0,      0,     0,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,     0,       0,      0,     0},
-                                {    0,      0,      0,     0,     0,   CYAN,   CYAN,   CYAN,   CYAN,   CYAN,     0,     0,       0,      0,     0},
-                                {    0,      0,      0,     0,  CYAN, YELLOW, YELLOW,   CYAN, YELLOW, YELLOW,  CYAN,     0,       0,      0,     0},
-                                {    0,      0,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,      0,     0},
-                                { CYAN,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,  CYAN},
-                                {    0,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,     0},
-                                {    0,   CYAN, ORANGE,  CYAN,  CYAN,      0, ORANGE,      0, ORANGE,      0,  CYAN,  CYAN,  ORANGE,   CYAN,     0},
-                                { CYAN,   CYAN, ORANGE,  CYAN,     0,      0, ORANGE,      0, ORANGE,      0,     0,  CYAN,  ORANGE,   CYAN,  CYAN},
-                                { CYAN, ORANGE,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN, ORANGE,  CYAN},
-                                { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
-                                { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
-                                { CYAN,   CYAN,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN,   CYAN,  CYAN},
-                                {    0,   CYAN,   CYAN,     0,     0,      0,      0,      0,      0,      0,     0,     0,    CYAN,   CYAN,     0}
+    short int array4[16][16] = {{    0,      0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,  CYAN,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,  CYAN,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,   CYAN,   CYAN,   CYAN,   CYAN,   CYAN,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,  CYAN, YELLOW, YELLOW,   CYAN, YELLOW, YELLOW,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,      0,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,      0,     0},
+                                {    0,   CYAN,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,  CYAN},
+                                {    0,      0,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,     0},
+                                {    0,      0,   CYAN, ORANGE,  CYAN,  CYAN,      0, ORANGE,      0, ORANGE,      0,  CYAN,  CYAN,  ORANGE,   CYAN,     0},
+                                {    0,   CYAN,   CYAN, ORANGE,  CYAN,     0,      0, ORANGE,      0, ORANGE,      0,     0,  CYAN,  ORANGE,   CYAN,  CYAN},
+                                {    0,   CYAN, ORANGE,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN, ORANGE,  CYAN},
+                                {    0,   CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
+                                {    0,   CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
+                                {    0,   CYAN,   CYAN,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN,   CYAN,  CYAN},
+                                {    0,      0,   CYAN,   CYAN,     0,     0,      0,      0,      0,      0,      0,     0,     0,    CYAN,   CYAN,     0}
     };
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
@@ -567,22 +577,22 @@ void initializeBossGalaga(gameObject* object)
         }
     }
     //5th sprite (incomplete)
-    short int array5[16][15] = {{    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
-                                {    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
-                                {    0,      0,      0,  CYAN,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,  CYAN,       0,      0,     0},
-                                {    0,      0,      0,     0,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,     0,       0,      0,     0},
-                                {    0,      0,      0,     0,     0,   CYAN,   CYAN,   CYAN,   CYAN,   CYAN,     0,     0,       0,      0,     0},
-                                {    0,      0,      0,     0,  CYAN, YELLOW, YELLOW,   CYAN, YELLOW, YELLOW,  CYAN,     0,       0,      0,     0},
-                                {    0,      0,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,      0,     0},
-                                { CYAN,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,  CYAN},
-                                {    0,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,     0},
-                                {    0,   CYAN, ORANGE,  CYAN,  CYAN,      0, ORANGE,      0, ORANGE,      0,  CYAN,  CYAN,  ORANGE,   CYAN,     0},
-                                { CYAN,   CYAN, ORANGE,  CYAN,     0,      0, ORANGE,      0, ORANGE,      0,     0,  CYAN,  ORANGE,   CYAN,  CYAN},
-                                { CYAN, ORANGE,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN, ORANGE,  CYAN},
-                                { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
-                                { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
-                                { CYAN,   CYAN,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN,   CYAN,  CYAN},
-                                {    0,   CYAN,   CYAN,     0,     0,      0,      0,      0,      0,      0,     0,     0,    CYAN,   CYAN,     0}
+    short int array5[16][16] = {{    0,      0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,  CYAN,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,  CYAN,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,   CYAN,   CYAN,   CYAN,   CYAN,   CYAN,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,  CYAN, YELLOW, YELLOW,   CYAN, YELLOW, YELLOW,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,      0,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,      0,     0},
+                                {    0,   CYAN,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,  CYAN},
+                                {    0,      0,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,     0},
+                                {    0,      0,   CYAN, ORANGE,  CYAN,  CYAN,      0, ORANGE,      0, ORANGE,      0,  CYAN,  CYAN,  ORANGE,   CYAN,     0},
+                                {    0,   CYAN,   CYAN, ORANGE,  CYAN,     0,      0, ORANGE,      0, ORANGE,      0,     0,  CYAN,  ORANGE,   CYAN,  CYAN},
+                                {    0,   CYAN, ORANGE,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN, ORANGE,  CYAN},
+                                {    0,   CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
+                                {    0,   CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
+                                {    0,   CYAN,   CYAN,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN,   CYAN,  CYAN},
+                                {    0,      0,   CYAN,   CYAN,     0,     0,      0,      0,      0,      0,      0,     0,     0,    CYAN,   CYAN,     0}
     };
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
@@ -590,22 +600,22 @@ void initializeBossGalaga(gameObject* object)
         }
     }
     //6th sprite (incomplete)
-    short int array6[16][15] = {{    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
-                                {    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
-                                {    0,      0,      0,  CYAN,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,  CYAN,       0,      0,     0},
-                                {    0,      0,      0,     0,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,     0,       0,      0,     0},
-                                {    0,      0,      0,     0,     0,   CYAN,   CYAN,   CYAN,   CYAN,   CYAN,     0,     0,       0,      0,     0},
-                                {    0,      0,      0,     0,  CYAN, YELLOW, YELLOW,   CYAN, YELLOW, YELLOW,  CYAN,     0,       0,      0,     0},
-                                {    0,      0,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,      0,     0},
-                                { CYAN,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,  CYAN},
-                                {    0,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,     0},
-                                {    0,   CYAN, ORANGE,  CYAN,  CYAN,      0, ORANGE,      0, ORANGE,      0,  CYAN,  CYAN,  ORANGE,   CYAN,     0},
-                                { CYAN,   CYAN, ORANGE,  CYAN,     0,      0, ORANGE,      0, ORANGE,      0,     0,  CYAN,  ORANGE,   CYAN,  CYAN},
-                                { CYAN, ORANGE,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN, ORANGE,  CYAN},
-                                { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
-                                { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
-                                { CYAN,   CYAN,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN,   CYAN,  CYAN},
-                                {    0,   CYAN,   CYAN,     0,     0,      0,      0,      0,      0,      0,     0,     0,    CYAN,   CYAN,     0}
+    short int array6[16][16] = {{    0,      0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,  CYAN,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,  CYAN,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,   CYAN,   CYAN,   CYAN,   CYAN,   CYAN,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,  CYAN, YELLOW, YELLOW,   CYAN, YELLOW, YELLOW,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,      0,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,      0,     0},
+                                {    0,   CYAN,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,  CYAN},
+                                {    0,      0,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,     0},
+                                {    0,      0,   CYAN, ORANGE,  CYAN,  CYAN,      0, ORANGE,      0, ORANGE,      0,  CYAN,  CYAN,  ORANGE,   CYAN,     0},
+                                {    0,   CYAN,   CYAN, ORANGE,  CYAN,     0,      0, ORANGE,      0, ORANGE,      0,     0,  CYAN,  ORANGE,   CYAN,  CYAN},
+                                {    0,   CYAN, ORANGE,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN, ORANGE,  CYAN},
+                                {    0,   CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
+                                {    0,   CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
+                                {    0,   CYAN,   CYAN,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN,   CYAN,  CYAN},
+                                {    0,      0,   CYAN,   CYAN,     0,     0,      0,      0,      0,      0,      0,     0,     0,    CYAN,   CYAN,     0}
     };
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
@@ -613,22 +623,22 @@ void initializeBossGalaga(gameObject* object)
         }
     }
     //7th sprite (incomplete)
-    short int array7[16][15] = {{    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
-                                {    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
-                                {    0,      0,      0,  CYAN,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,  CYAN,       0,      0,     0},
-                                {    0,      0,      0,     0,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,     0,       0,      0,     0},
-                                {    0,      0,      0,     0,     0,   CYAN,   CYAN,   CYAN,   CYAN,   CYAN,     0,     0,       0,      0,     0},
-                                {    0,      0,      0,     0,  CYAN, YELLOW, YELLOW,   CYAN, YELLOW, YELLOW,  CYAN,     0,       0,      0,     0},
-                                {    0,      0,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,      0,     0},
-                                { CYAN,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,  CYAN},
-                                {    0,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,     0},
-                                {    0,   CYAN, ORANGE,  CYAN,  CYAN,      0, ORANGE,      0, ORANGE,      0,  CYAN,  CYAN,  ORANGE,   CYAN,     0},
-                                { CYAN,   CYAN, ORANGE,  CYAN,     0,      0, ORANGE,      0, ORANGE,      0,     0,  CYAN,  ORANGE,   CYAN,  CYAN},
-                                { CYAN, ORANGE,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN, ORANGE,  CYAN},
-                                { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
-                                { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
-                                { CYAN,   CYAN,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN,   CYAN,  CYAN},
-                                {    0,   CYAN,   CYAN,     0,     0,      0,      0,      0,      0,      0,     0,     0,    CYAN,   CYAN,     0}
+    short int array7[16][16] = {{    0,      0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,  CYAN,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,  CYAN,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,   CYAN,   CYAN,   CYAN,   CYAN,   CYAN,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,  CYAN, YELLOW, YELLOW,   CYAN, YELLOW, YELLOW,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,      0,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,      0,     0},
+                                {    0,   CYAN,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,  CYAN},
+                                {    0,      0,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,     0},
+                                {    0,      0,   CYAN, ORANGE,  CYAN,  CYAN,      0, ORANGE,      0, ORANGE,      0,  CYAN,  CYAN,  ORANGE,   CYAN,     0},
+                                {    0,   CYAN,   CYAN, ORANGE,  CYAN,     0,      0, ORANGE,      0, ORANGE,      0,     0,  CYAN,  ORANGE,   CYAN,  CYAN},
+                                {    0,   CYAN, ORANGE,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN, ORANGE,  CYAN},
+                                {    0,   CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
+                                {    0,   CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
+                                {    0,   CYAN,   CYAN,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN,   CYAN,  CYAN},
+                                {    0,      0,   CYAN,   CYAN,     0,     0,      0,      0,      0,      0,      0,     0,     0,    CYAN,   CYAN,     0}
     };
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
@@ -640,22 +650,22 @@ void initializeBossGalaga(gameObject* object)
 void initializeGoeiGalaga(gameObject* object)
 {   
     //0th sprite (incomplete)
-    short int array0[16][15] = {{    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,       0,      0,     0},
-                               {    0,    RED,    RED,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,     RED,    RED,     0},
-                               {    0,    RED,    RED,   RED,     0,  WHITE,    RED,  WHITE,    RED,  WHITE,     0,   RED,     RED,    RED,     0},
-                               {    0,    RED,    RED,   RED,     0,  WHITE,  WHITE,  WHITE,  WHITE,  WHITE,     0,   RED,     RED,    RED,     0},
-                               {    0,      0,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,      0,     0},
-                               {    0,      0,      0,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,       0,      0,     0},
-                               {    0,      0,    RED,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,     RED,      0,     0},
-                               {    0,    RED,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,    RED,     0},
-                               {    0,      0,    RED,   RED,   RED,      0,   BLUE,   BLUE,   BLUE,      0,   RED,   RED,     RED,      0,     0},
-                               {    0,      0,      0,     0,   RED,      0,      0,      0,      0,      0,   RED,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0}
+    short int array0[16][16] = {{    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,       0,      0,     0},
+                                {    0,      0,    RED,    RED,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,     RED,    RED,     0},
+                                {    0,      0,    RED,    RED,   RED,     0,  WHITE,    RED,  WHITE,    RED,  WHITE,     0,   RED,     RED,    RED,     0},
+                                {    0,      0,    RED,    RED,   RED,     0,  WHITE,  WHITE,  WHITE,  WHITE,  WHITE,     0,   RED,     RED,    RED,     0},
+                                {    0,      0,      0,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,      0,     0},
+                                {    0,      0,      0,      0,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,       0,      0,     0},
+                                {    0,      0,      0,    RED,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,     RED,      0,     0},
+                                {    0,      0,    RED,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,    RED,     0},
+                                {    0,      0,      0,    RED,   RED,   RED,      0,   BLUE,   BLUE,   BLUE,      0,   RED,   RED,     RED,      0,     0},
+                                {    0,      0,      0,      0,     0,   RED,      0,      0,      0,      0,      0,   RED,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0}
     };
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
@@ -663,22 +673,22 @@ void initializeGoeiGalaga(gameObject* object)
         }
     }
     //1st sprite (complete)
-    short int array1[16][15] = {{    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,       0,      0,     0},
-                               {    0,    RED,    RED,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,     RED,    RED,     0},
-                               {    0,    RED,    RED,   RED,     0,  WHITE,    RED,  WHITE,    RED,  WHITE,     0,   RED,     RED,    RED,     0},
-                               {    0,    RED,    RED,   RED,     0,  WHITE,  WHITE,  WHITE,  WHITE,  WHITE,     0,   RED,     RED,    RED,     0},
-                               {    0,      0,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,      0,     0},
-                               {    0,      0,      0,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,       0,      0,     0},
-                               {    0,      0,    RED,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,     RED,      0,     0},
-                               {    0,    RED,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,    RED,     0},
-                               {    0,      0,    RED,   RED,   RED,      0,   BLUE,   BLUE,   BLUE,      0,   RED,   RED,     RED,      0,     0},
-                               {    0,      0,      0,     0,   RED,      0,      0,      0,      0,      0,   RED,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0}
+    short int array1[16][16] = {{    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,       0,      0,     0},
+                                {    0,      0,    RED,    RED,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,     RED,    RED,     0},
+                                {    0,      0,    RED,    RED,   RED,     0,  WHITE,    RED,  WHITE,    RED,  WHITE,     0,   RED,     RED,    RED,     0},
+                                {    0,      0,    RED,    RED,   RED,     0,  WHITE,  WHITE,  WHITE,  WHITE,  WHITE,     0,   RED,     RED,    RED,     0},
+                                {    0,      0,      0,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,      0,     0},
+                                {    0,      0,      0,      0,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,       0,      0,     0},
+                                {    0,      0,      0,    RED,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,     RED,      0,     0},
+                                {    0,      0,    RED,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,    RED,     0},
+                                {    0,      0,      0,    RED,   RED,   RED,      0,   BLUE,   BLUE,   BLUE,      0,   RED,   RED,     RED,      0,     0},
+                                {    0,      0,      0,      0,     0,   RED,      0,      0,      0,      0,      0,   RED,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0}
     };
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
@@ -686,22 +696,22 @@ void initializeGoeiGalaga(gameObject* object)
         }
     }
     //2nd sprite (incomplete)
-    short int array2[16][15] = {{    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,       0,      0,     0},
-                               {    0,    RED,    RED,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,     RED,    RED,     0},
-                               {    0,    RED,    RED,   RED,     0,  WHITE,    RED,  WHITE,    RED,  WHITE,     0,   RED,     RED,    RED,     0},
-                               {    0,    RED,    RED,   RED,     0,  WHITE,  WHITE,  WHITE,  WHITE,  WHITE,     0,   RED,     RED,    RED,     0},
-                               {    0,      0,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,      0,     0},
-                               {    0,      0,      0,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,       0,      0,     0},
-                               {    0,      0,    RED,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,     RED,      0,     0},
-                               {    0,    RED,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,    RED,     0},
-                               {    0,      0,    RED,   RED,   RED,      0,   BLUE,   BLUE,   BLUE,      0,   RED,   RED,     RED,      0,     0},
-                               {    0,      0,      0,     0,   RED,      0,      0,      0,      0,      0,   RED,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0}
+    short int array2[16][16] = {{    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,       0,      0,     0},
+                                {    0,      0,    RED,    RED,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,     RED,    RED,     0},
+                                {    0,      0,    RED,    RED,   RED,     0,  WHITE,    RED,  WHITE,    RED,  WHITE,     0,   RED,     RED,    RED,     0},
+                                {    0,      0,    RED,    RED,   RED,     0,  WHITE,  WHITE,  WHITE,  WHITE,  WHITE,     0,   RED,     RED,    RED,     0},
+                                {    0,      0,      0,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,      0,     0},
+                                {    0,      0,      0,      0,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,       0,      0,     0},
+                                {    0,      0,      0,    RED,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,     RED,      0,     0},
+                                {    0,      0,    RED,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,    RED,     0},
+                                {    0,      0,      0,    RED,   RED,   RED,      0,   BLUE,   BLUE,   BLUE,      0,   RED,   RED,     RED,      0,     0},
+                                {    0,      0,      0,      0,     0,   RED,      0,      0,      0,      0,      0,   RED,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0}
     };
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
@@ -709,22 +719,22 @@ void initializeGoeiGalaga(gameObject* object)
         }
     }
     //3rd sprite (incomplete)
-    short int array3[16][15] = {{    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,       0,      0,     0},
-                               {    0,    RED,    RED,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,     RED,    RED,     0},
-                               {    0,    RED,    RED,   RED,     0,  WHITE,    RED,  WHITE,    RED,  WHITE,     0,   RED,     RED,    RED,     0},
-                               {    0,    RED,    RED,   RED,     0,  WHITE,  WHITE,  WHITE,  WHITE,  WHITE,     0,   RED,     RED,    RED,     0},
-                               {    0,      0,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,      0,     0},
-                               {    0,      0,      0,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,       0,      0,     0},
-                               {    0,      0,    RED,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,     RED,      0,     0},
-                               {    0,    RED,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,    RED,     0},
-                               {    0,      0,    RED,   RED,   RED,      0,   BLUE,   BLUE,   BLUE,      0,   RED,   RED,     RED,      0,     0},
-                               {    0,      0,      0,     0,   RED,      0,      0,      0,      0,      0,   RED,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0}
+    short int array3[16][16] = {{    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,       0,      0,     0},
+                                {    0,      0,    RED,    RED,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,     RED,    RED,     0},
+                                {    0,      0,    RED,    RED,   RED,     0,  WHITE,    RED,  WHITE,    RED,  WHITE,     0,   RED,     RED,    RED,     0},
+                                {    0,      0,    RED,    RED,   RED,     0,  WHITE,  WHITE,  WHITE,  WHITE,  WHITE,     0,   RED,     RED,    RED,     0},
+                                {    0,      0,      0,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,      0,     0},
+                                {    0,      0,      0,      0,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,       0,      0,     0},
+                                {    0,      0,      0,    RED,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,     RED,      0,     0},
+                                {    0,      0,    RED,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,    RED,     0},
+                                {    0,      0,      0,    RED,   RED,   RED,      0,   BLUE,   BLUE,   BLUE,      0,   RED,   RED,     RED,      0,     0},
+                                {    0,      0,      0,      0,     0,   RED,      0,      0,      0,      0,      0,   RED,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0}
     };
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
@@ -732,22 +742,22 @@ void initializeGoeiGalaga(gameObject* object)
         }
     }
     //4th sprite (incomplete)
-    short int array4[16][15] = {{    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,       0,      0,     0},
-                               {    0,    RED,    RED,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,     RED,    RED,     0},
-                               {    0,    RED,    RED,   RED,     0,  WHITE,    RED,  WHITE,    RED,  WHITE,     0,   RED,     RED,    RED,     0},
-                               {    0,    RED,    RED,   RED,     0,  WHITE,  WHITE,  WHITE,  WHITE,  WHITE,     0,   RED,     RED,    RED,     0},
-                               {    0,      0,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,      0,     0},
-                               {    0,      0,      0,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,       0,      0,     0},
-                               {    0,      0,    RED,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,     RED,      0,     0},
-                               {    0,    RED,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,    RED,     0},
-                               {    0,      0,    RED,   RED,   RED,      0,   BLUE,   BLUE,   BLUE,      0,   RED,   RED,     RED,      0,     0},
-                               {    0,      0,      0,     0,   RED,      0,      0,      0,      0,      0,   RED,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0}
+    short int array4[16][16] = {{    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,       0,      0,     0},
+                                {    0,      0,    RED,    RED,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,     RED,    RED,     0},
+                                {    0,      0,    RED,    RED,   RED,     0,  WHITE,    RED,  WHITE,    RED,  WHITE,     0,   RED,     RED,    RED,     0},
+                                {    0,      0,    RED,    RED,   RED,     0,  WHITE,  WHITE,  WHITE,  WHITE,  WHITE,     0,   RED,     RED,    RED,     0},
+                                {    0,      0,      0,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,      0,     0},
+                                {    0,      0,      0,      0,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,       0,      0,     0},
+                                {    0,      0,      0,    RED,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,     RED,      0,     0},
+                                {    0,      0,    RED,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,    RED,     0},
+                                {    0,      0,      0,    RED,   RED,   RED,      0,   BLUE,   BLUE,   BLUE,      0,   RED,   RED,     RED,      0,     0},
+                                {    0,      0,      0,      0,     0,   RED,      0,      0,      0,      0,      0,   RED,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0}
     };
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
@@ -755,22 +765,22 @@ void initializeGoeiGalaga(gameObject* object)
         }
     }
     //5th sprite (incomplete)
-    short int array5[16][15] = {{    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,       0,      0,     0},
-                               {    0,    RED,    RED,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,     RED,    RED,     0},
-                               {    0,    RED,    RED,   RED,     0,  WHITE,    RED,  WHITE,    RED,  WHITE,     0,   RED,     RED,    RED,     0},
-                               {    0,    RED,    RED,   RED,     0,  WHITE,  WHITE,  WHITE,  WHITE,  WHITE,     0,   RED,     RED,    RED,     0},
-                               {    0,      0,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,      0,     0},
-                               {    0,      0,      0,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,       0,      0,     0},
-                               {    0,      0,    RED,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,     RED,      0,     0},
-                               {    0,    RED,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,    RED,     0},
-                               {    0,      0,    RED,   RED,   RED,      0,   BLUE,   BLUE,   BLUE,      0,   RED,   RED,     RED,      0,     0},
-                               {    0,      0,      0,     0,   RED,      0,      0,      0,      0,      0,   RED,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0}
+    short int array5[16][16] = {{    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,       0,      0,     0},
+                                {    0,      0,    RED,    RED,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,     RED,    RED,     0},
+                                {    0,      0,    RED,    RED,   RED,     0,  WHITE,    RED,  WHITE,    RED,  WHITE,     0,   RED,     RED,    RED,     0},
+                                {    0,      0,    RED,    RED,   RED,     0,  WHITE,  WHITE,  WHITE,  WHITE,  WHITE,     0,   RED,     RED,    RED,     0},
+                                {    0,      0,      0,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,      0,     0},
+                                {    0,      0,      0,      0,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,       0,      0,     0},
+                                {    0,      0,      0,    RED,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,     RED,      0,     0},
+                                {    0,      0,    RED,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,    RED,     0},
+                                {    0,      0,      0,    RED,   RED,   RED,      0,   BLUE,   BLUE,   BLUE,      0,   RED,   RED,     RED,      0,     0},
+                                {    0,      0,      0,      0,     0,   RED,      0,      0,      0,      0,      0,   RED,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0}
     };
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
@@ -778,22 +788,22 @@ void initializeGoeiGalaga(gameObject* object)
         }
     }
     //6th sprite (incomplete)
-    short int array6[16][15] = {{    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,       0,      0,     0},
-                               {    0,    RED,    RED,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,     RED,    RED,     0},
-                               {    0,    RED,    RED,   RED,     0,  WHITE,    RED,  WHITE,    RED,  WHITE,     0,   RED,     RED,    RED,     0},
-                               {    0,    RED,    RED,   RED,     0,  WHITE,  WHITE,  WHITE,  WHITE,  WHITE,     0,   RED,     RED,    RED,     0},
-                               {    0,      0,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,      0,     0},
-                               {    0,      0,      0,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,       0,      0,     0},
-                               {    0,      0,    RED,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,     RED,      0,     0},
-                               {    0,    RED,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,    RED,     0},
-                               {    0,      0,    RED,   RED,   RED,      0,   BLUE,   BLUE,   BLUE,      0,   RED,   RED,     RED,      0,     0},
-                               {    0,      0,      0,     0,   RED,      0,      0,      0,      0,      0,   RED,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0}
+    short int array6[16][16] = {{    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,       0,      0,     0},
+                                {    0,      0,    RED,    RED,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,     RED,    RED,     0},
+                                {    0,      0,    RED,    RED,   RED,     0,  WHITE,    RED,  WHITE,    RED,  WHITE,     0,   RED,     RED,    RED,     0},
+                                {    0,      0,    RED,    RED,   RED,     0,  WHITE,  WHITE,  WHITE,  WHITE,  WHITE,     0,   RED,     RED,    RED,     0},
+                                {    0,      0,      0,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,      0,     0},
+                                {    0,      0,      0,      0,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,       0,      0,     0},
+                                {    0,      0,      0,    RED,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,     RED,      0,     0},
+                                {    0,      0,    RED,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,    RED,     0},
+                                {    0,      0,      0,    RED,   RED,   RED,      0,   BLUE,   BLUE,   BLUE,      0,   RED,   RED,     RED,      0,     0},
+                                {    0,      0,      0,      0,     0,   RED,      0,      0,      0,      0,      0,   RED,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0}
     };
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
@@ -801,22 +811,22 @@ void initializeGoeiGalaga(gameObject* object)
         }
     }
     //7th sprite (incomplete)
-    short int array7[16][15] = {{    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,       0,      0,     0},
-                               {    0,    RED,    RED,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,     RED,    RED,     0},
-                               {    0,    RED,    RED,   RED,     0,  WHITE,    RED,  WHITE,    RED,  WHITE,     0,   RED,     RED,    RED,     0},
-                               {    0,    RED,    RED,   RED,     0,  WHITE,  WHITE,  WHITE,  WHITE,  WHITE,     0,   RED,     RED,    RED,     0},
-                               {    0,      0,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,      0,     0},
-                               {    0,      0,      0,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,       0,      0,     0},
-                               {    0,      0,    RED,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,     RED,      0,     0},
-                               {    0,    RED,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,    RED,     0},
-                               {    0,      0,    RED,   RED,   RED,      0,   BLUE,   BLUE,   BLUE,      0,   RED,   RED,     RED,      0,     0},
-                               {    0,      0,      0,     0,   RED,      0,      0,      0,      0,      0,   RED,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0}
+    short int array7[16][16] = {{    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,       0,      0,     0},
+                                {    0,      0,    RED,    RED,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,     RED,    RED,     0},
+                                {    0,      0,    RED,    RED,   RED,     0,  WHITE,    RED,  WHITE,    RED,  WHITE,     0,   RED,     RED,    RED,     0},
+                                {    0,      0,    RED,    RED,   RED,     0,  WHITE,  WHITE,  WHITE,  WHITE,  WHITE,     0,   RED,     RED,    RED,     0},
+                                {    0,      0,      0,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,      0,     0},
+                                {    0,      0,      0,      0,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,       0,      0,     0},
+                                {    0,      0,      0,    RED,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,     RED,      0,     0},
+                                {    0,      0,    RED,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,    RED,     0},
+                                {    0,      0,      0,    RED,   RED,   RED,      0,   BLUE,   BLUE,   BLUE,      0,   RED,   RED,     RED,      0,     0},
+                                {    0,      0,      0,      0,     0,   RED,      0,      0,      0,      0,      0,   RED,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0}
     };
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
