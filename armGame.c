@@ -67,7 +67,7 @@ typedef struct gameObject
     int length;
     int height;
     rect hitbox;
-    short int sprite[16][15];
+    short int sprite[8][16][15];
 } gameObject;
 
 //basic functions
@@ -76,7 +76,7 @@ void swap(int* a, int* b);
 //gameObject functions
 gameObject createObject(int length_, int height_);
 void setObjectPos(gameObject* object, int x_, int y_);
-void drawObject(gameObject object);
+void drawObject(gameObject object, int spriteNum);
 
 //assets
 void initializePlayer(gameObject* object);
@@ -103,6 +103,7 @@ void waitForVSync(volatile int status, volatile int* frontBuffAddr);
 
 volatile int pixel_buffer_start; // global variable
 int pixelSize = 2;
+int timer = 0;
 
 int main(void)
 {
@@ -154,9 +155,9 @@ int main(void)
     drawRect(square);
     drawRect(ground);
     drawRect(platform);
-    drawObject(player);
-    drawObject(bossGalaga);
-    drawObject(goeiGalaga);
+    drawObject(player, 1);
+    drawObject(bossGalaga, 1);
+    drawObject(goeiGalaga, 1);
 
     *frontBuffAddr = 1;
     wait_for_vsync(status, frontBuffAddr);
@@ -190,9 +191,10 @@ int main(void)
             square.dy += 1;
         }
         
-        drawObject(player);
-        drawObject(bossGalaga);
-        drawObject(goeiGalaga);
+        drawObject(player, 1);
+        setObjectPos(&bossGalaga, 20, 0);
+        drawObject(bossGalaga, (timer/10)%2);
+        drawObject(goeiGalaga, 1);
 
         // if ((square.bottom >= platform.top)/* && (square.right >= platform.left) && (square.left <= platform.right)*/) {
         //     square.dy = 0;
@@ -230,6 +232,7 @@ int main(void)
         *frontBuffAddr = 1;//swap buffers
         wait_for_vsync(status, frontBuffAddr); //wait for VGA vertical sync
         pixel_buffer_start = *backBuffAddr; // new back buffer
+        timer = timer + 1;
     }
 }
 
@@ -259,14 +262,14 @@ void setObjectPos(gameObject* object, int x_, int y_)
     setRectPos(&object->hitbox, x_, y_);
 }
 
-void drawObject(gameObject object)
+void drawObject(gameObject object, int spriteNum)
 {
     for (int row = 0; row < object.height; row++) {
         for (int col = 0; col < object.length; col++) {
             //plot_pixel(object.hitbox.x + col, object.hitbox.y + row, object.sprite[row][col]);
             for (int i = 0; i < pixelSize; i++) {
                 for (int j = 0; j < pixelSize; j++) {
-                    plot_pixel(pixelSize*(object.hitbox.x + col) + i, pixelSize*(object.hitbox.y + row) + j, object.sprite[row][col]);
+                    plot_pixel(pixelSize*(object.hitbox.x + col) + i, pixelSize*(object.hitbox.y + row) + j, object.sprite[spriteNum][row][col]);
                 }
             }
         }
@@ -275,62 +278,369 @@ void drawObject(gameObject object)
 
 //assets
 void initializePlayer(gameObject* object)
-{
-    short int array[16][15] = {{    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
-                               {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
-                               {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
-                               {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
-                               {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
-                               {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
-                               {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
-                               {    0,     0,     0, WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE,     0, WHITE,       0,     0,     0},
-                               {  RED,     0,     0, WHITE,  BLUE, WHITE, WHITE,   RED, WHITE, WHITE,  BLUE, WHITE,       0,     0,   RED},
-                               {  RED,     0,     0,  BLUE, WHITE, WHITE,   RED,   RED,   RED, WHITE, WHITE,  BLUE,       0,     0,   RED},
-                               {WHITE,     0,     0, WHITE, WHITE, WHITE,   RED, WHITE,   RED, WHITE, WHITE,  WHITE,      0,     0, WHITE},
-                               {WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE,  WHITE,  WHITE,     0, WHITE},
-                               {WHITE, WHITE, WHITE, WHITE, WHITE,   RED, WHITE, WHITE, WHITE,   RED, WHITE,  WHITE,  WHITE, WHITE, WHITE},
-                               {WHITE, WHITE, WHITE,     0,   RED,   RED, WHITE, WHITE, WHITE,   RED,   RED,      0,  WHITE, WHITE, WHITE},
-                               {WHITE, WHITE,     0,     0,   RED,   RED,     0, WHITE,     0,   RED,   RED,      0,      0, WHITE, WHITE},
-                               {WHITE,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,      0,      0,     0, WHITE}
+{   
+    //player has no 0th sprite, fill with black (complete)
+    for (int row = 0; row < object->height; row++) {
+        for (int col = 0; col < object->length; col++) {
+            object->sprite[0][row][col] = 0;
+        }
+    }
+    
+    //1st sprite (complete)
+    short int array1[16][15] = {{    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
+                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
+                                {    0,     0,     0, WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE,     0, WHITE,       0,     0,     0},
+                                {  RED,     0,     0, WHITE,  BLUE, WHITE, WHITE,   RED, WHITE, WHITE,  BLUE, WHITE,       0,     0,   RED},
+                                {  RED,     0,     0,  BLUE, WHITE, WHITE,   RED,   RED,   RED, WHITE, WHITE,  BLUE,       0,     0,   RED},
+                                {WHITE,     0,     0, WHITE, WHITE, WHITE,   RED, WHITE,   RED, WHITE, WHITE,  WHITE,      0,     0, WHITE},
+                                {WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE,  WHITE,  WHITE,     0, WHITE},
+                                {WHITE, WHITE, WHITE, WHITE, WHITE,   RED, WHITE, WHITE, WHITE,   RED, WHITE,  WHITE,  WHITE, WHITE, WHITE},
+                                {WHITE, WHITE, WHITE,     0,   RED,   RED, WHITE, WHITE, WHITE,   RED,   RED,      0,  WHITE, WHITE, WHITE},
+                                {WHITE, WHITE,     0,     0,   RED,   RED,     0, WHITE,     0,   RED,   RED,      0,      0, WHITE, WHITE},
+                                {WHITE,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,      0,      0,     0, WHITE}
     };
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
-            object->sprite[row][col] = array[row][col];
+            object->sprite[1][row][col] = array1[row][col];
         }
     }
-
+    //2nd sprite (incomplete)
+    short int array2[16][15] = {{    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
+                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
+                                {    0,     0,     0, WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE,     0, WHITE,       0,     0,     0},
+                                {  RED,     0,     0, WHITE,  BLUE, WHITE, WHITE,   RED, WHITE, WHITE,  BLUE, WHITE,       0,     0,   RED},
+                                {  RED,     0,     0,  BLUE, WHITE, WHITE,   RED,   RED,   RED, WHITE, WHITE,  BLUE,       0,     0,   RED},
+                                {WHITE,     0,     0, WHITE, WHITE, WHITE,   RED, WHITE,   RED, WHITE, WHITE,  WHITE,      0,     0, WHITE},
+                                {WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE,  WHITE,  WHITE,     0, WHITE},
+                                {WHITE, WHITE, WHITE, WHITE, WHITE,   RED, WHITE, WHITE, WHITE,   RED, WHITE,  WHITE,  WHITE, WHITE, WHITE},
+                                {WHITE, WHITE, WHITE,     0,   RED,   RED, WHITE, WHITE, WHITE,   RED,   RED,      0,  WHITE, WHITE, WHITE},
+                                {WHITE, WHITE,     0,     0,   RED,   RED,     0, WHITE,     0,   RED,   RED,      0,      0, WHITE, WHITE},
+                                {WHITE,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,      0,      0,     0, WHITE}
+    };
+    for (int row = 0; row < object->height; row++) {
+        for (int col = 0; col < object->length; col++) {
+            object->sprite[2][row][col] = array2[row][col];
+        }
+    }
+    //3rd sprite (incomplete)
+    short int array3[16][15] = {{    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
+                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
+                                {    0,     0,     0, WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE,     0, WHITE,       0,     0,     0},
+                                {  RED,     0,     0, WHITE,  BLUE, WHITE, WHITE,   RED, WHITE, WHITE,  BLUE, WHITE,       0,     0,   RED},
+                                {  RED,     0,     0,  BLUE, WHITE, WHITE,   RED,   RED,   RED, WHITE, WHITE,  BLUE,       0,     0,   RED},
+                                {WHITE,     0,     0, WHITE, WHITE, WHITE,   RED, WHITE,   RED, WHITE, WHITE,  WHITE,      0,     0, WHITE},
+                                {WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE,  WHITE,  WHITE,     0, WHITE},
+                                {WHITE, WHITE, WHITE, WHITE, WHITE,   RED, WHITE, WHITE, WHITE,   RED, WHITE,  WHITE,  WHITE, WHITE, WHITE},
+                                {WHITE, WHITE, WHITE,     0,   RED,   RED, WHITE, WHITE, WHITE,   RED,   RED,      0,  WHITE, WHITE, WHITE},
+                                {WHITE, WHITE,     0,     0,   RED,   RED,     0, WHITE,     0,   RED,   RED,      0,      0, WHITE, WHITE},
+                                {WHITE,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,      0,      0,     0, WHITE}
+    };
+    for (int row = 0; row < object->height; row++) {
+        for (int col = 0; col < object->length; col++) {
+            object->sprite[3][row][col] = array3[row][col];
+        }
+    }
+    //4th sprite (incomplete)
+    short int array4[16][15] = {{    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
+                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
+                                {    0,     0,     0, WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE,     0, WHITE,       0,     0,     0},
+                                {  RED,     0,     0, WHITE,  BLUE, WHITE, WHITE,   RED, WHITE, WHITE,  BLUE, WHITE,       0,     0,   RED},
+                                {  RED,     0,     0,  BLUE, WHITE, WHITE,   RED,   RED,   RED, WHITE, WHITE,  BLUE,       0,     0,   RED},
+                                {WHITE,     0,     0, WHITE, WHITE, WHITE,   RED, WHITE,   RED, WHITE, WHITE,  WHITE,      0,     0, WHITE},
+                                {WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE,  WHITE,  WHITE,     0, WHITE},
+                                {WHITE, WHITE, WHITE, WHITE, WHITE,   RED, WHITE, WHITE, WHITE,   RED, WHITE,  WHITE,  WHITE, WHITE, WHITE},
+                                {WHITE, WHITE, WHITE,     0,   RED,   RED, WHITE, WHITE, WHITE,   RED,   RED,      0,  WHITE, WHITE, WHITE},
+                                {WHITE, WHITE,     0,     0,   RED,   RED,     0, WHITE,     0,   RED,   RED,      0,      0, WHITE, WHITE},
+                                {WHITE,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,      0,      0,     0, WHITE}
+    };
+    for (int row = 0; row < object->height; row++) {
+        for (int col = 0; col < object->length; col++) {
+            object->sprite[4][row][col] = array4[row][col];
+        }
+    }
+    //5th sprite (incomplete)
+    short int array5[16][15] = {{    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
+                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
+                                {    0,     0,     0, WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE,     0, WHITE,       0,     0,     0},
+                                {  RED,     0,     0, WHITE,  BLUE, WHITE, WHITE,   RED, WHITE, WHITE,  BLUE, WHITE,       0,     0,   RED},
+                                {  RED,     0,     0,  BLUE, WHITE, WHITE,   RED,   RED,   RED, WHITE, WHITE,  BLUE,       0,     0,   RED},
+                                {WHITE,     0,     0, WHITE, WHITE, WHITE,   RED, WHITE,   RED, WHITE, WHITE,  WHITE,      0,     0, WHITE},
+                                {WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE,  WHITE,  WHITE,     0, WHITE},
+                                {WHITE, WHITE, WHITE, WHITE, WHITE,   RED, WHITE, WHITE, WHITE,   RED, WHITE,  WHITE,  WHITE, WHITE, WHITE},
+                                {WHITE, WHITE, WHITE,     0,   RED,   RED, WHITE, WHITE, WHITE,   RED,   RED,      0,  WHITE, WHITE, WHITE},
+                                {WHITE, WHITE,     0,     0,   RED,   RED,     0, WHITE,     0,   RED,   RED,      0,      0, WHITE, WHITE},
+                                {WHITE,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,      0,      0,     0, WHITE}
+    };
+    for (int row = 0; row < object->height; row++) {
+        for (int col = 0; col < object->length; col++) {
+            object->sprite[5][row][col] = array5[row][col];
+        }
+    }
+    //6th sprite (incomplete)
+    short int array6[16][15] = {{    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
+                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
+                                {    0,     0,     0, WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE,     0, WHITE,       0,     0,     0},
+                                {  RED,     0,     0, WHITE,  BLUE, WHITE, WHITE,   RED, WHITE, WHITE,  BLUE, WHITE,       0,     0,   RED},
+                                {  RED,     0,     0,  BLUE, WHITE, WHITE,   RED,   RED,   RED, WHITE, WHITE,  BLUE,       0,     0,   RED},
+                                {WHITE,     0,     0, WHITE, WHITE, WHITE,   RED, WHITE,   RED, WHITE, WHITE,  WHITE,      0,     0, WHITE},
+                                {WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE,  WHITE,  WHITE,     0, WHITE},
+                                {WHITE, WHITE, WHITE, WHITE, WHITE,   RED, WHITE, WHITE, WHITE,   RED, WHITE,  WHITE,  WHITE, WHITE, WHITE},
+                                {WHITE, WHITE, WHITE,     0,   RED,   RED, WHITE, WHITE, WHITE,   RED,   RED,      0,  WHITE, WHITE, WHITE},
+                                {WHITE, WHITE,     0,     0,   RED,   RED,     0, WHITE,     0,   RED,   RED,      0,      0, WHITE, WHITE},
+                                {WHITE,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,      0,      0,     0, WHITE}
+    };
+    for (int row = 0; row < object->height; row++) {
+        for (int col = 0; col < object->length; col++) {
+            object->sprite[6][row][col] = array6[row][col];
+        }
+    }
+    //7th sprite (incomplete)
+    short int array7[16][15] = {{    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,     0,     0,     0, WHITE, WHITE, WHITE,     0,     0,     0,       0,     0,     0},
+                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
+                                {    0,     0,     0,   RED,     0,     0, WHITE, WHITE, WHITE,     0,     0,   RED,       0,     0,     0},
+                                {    0,     0,     0, WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE,     0, WHITE,       0,     0,     0},
+                                {  RED,     0,     0, WHITE,  BLUE, WHITE, WHITE,   RED, WHITE, WHITE,  BLUE, WHITE,       0,     0,   RED},
+                                {  RED,     0,     0,  BLUE, WHITE, WHITE,   RED,   RED,   RED, WHITE, WHITE,  BLUE,       0,     0,   RED},
+                                {WHITE,     0,     0, WHITE, WHITE, WHITE,   RED, WHITE,   RED, WHITE, WHITE,  WHITE,      0,     0, WHITE},
+                                {WHITE,     0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE,  WHITE,  WHITE,     0, WHITE},
+                                {WHITE, WHITE, WHITE, WHITE, WHITE,   RED, WHITE, WHITE, WHITE,   RED, WHITE,  WHITE,  WHITE, WHITE, WHITE},
+                                {WHITE, WHITE, WHITE,     0,   RED,   RED, WHITE, WHITE, WHITE,   RED,   RED,      0,  WHITE, WHITE, WHITE},
+                                {WHITE, WHITE,     0,     0,   RED,   RED,     0, WHITE,     0,   RED,   RED,      0,      0, WHITE, WHITE},
+                                {WHITE,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,      0,      0,     0, WHITE}
+    };
+    for (int row = 0; row < object->height; row++) {
+        for (int col = 0; col < object->length; col++) {
+            object->sprite[7][row][col] = array7[row][col];
+        }
+    }
 }
 
 void initializeBossGalaga(gameObject* object)
-{
-    short int array[16][15] = {{    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,  CYAN,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,  CYAN,       0,      0,     0},
-                               {    0,      0,      0,     0,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,     0,   CYAN,   CYAN,   CYAN,   CYAN,   CYAN,     0,     0,       0,      0,     0},
-                               {    0,      0,      0,     0,  CYAN, YELLOW, YELLOW,   CYAN, YELLOW, YELLOW,  CYAN,     0,       0,      0,     0},
-                               {    0,      0,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,      0,     0},
-                               { CYAN,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,  CYAN},
-                               {    0,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,     0},
-                               {    0,   CYAN, ORANGE,  CYAN,  CYAN,      0, ORANGE,      0, ORANGE,      0,  CYAN,  CYAN,  ORANGE,   CYAN,     0},
-                               { CYAN,   CYAN, ORANGE,  CYAN,     0,      0, ORANGE,      0, ORANGE,      0,     0,  CYAN,  ORANGE,   CYAN,  CYAN},
-                               { CYAN, ORANGE,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN, ORANGE,  CYAN},
-                               { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
-                               { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
-                               { CYAN,   CYAN,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN,   CYAN,  CYAN},
-                               {    0,   CYAN,   CYAN,     0,     0,      0,      0,      0,      0,      0,     0,     0,    CYAN,   CYAN,     0}
+{   
+    //0th sprite (incomplete)
+    short int array0[16][15] = {{    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,  CYAN,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,  CYAN,       0,      0,     0},
+                                {    0,      0,      0,     0,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,      0,     0,     0,   CYAN,   CYAN,   CYAN,   CYAN,   CYAN,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,  CYAN,  CYAN, YELLOW, YELLOW,   CYAN, YELLOW, YELLOW,  CYAN,  CYAN,       0,      0,     0},
+                                {    0,      0,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,      0,     0},
+                                { CYAN,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,  CYAN},
+                                {    0,   CYAN,   CYAN,  CYAN,     0, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,     0,  CYAN,    CYAN,   CYAN,     0},
+                                {    0,      0,   CYAN,  CYAN,     0,      0, ORANGE,      0, ORANGE,      0,     0,  CYAN,    CYAN,      0,     0},
+                                {    0,      0,   CYAN,  CYAN,     0,      0, ORANGE,      0, ORANGE,      0,     0,  CYAN,    CYAN,      0,     0},
+                                {    0,      0,   CYAN,  CYAN,  CYAN,      0,      0,      0,      0,      0,  CYAN,  CYAN,    CYAN,      0,     0},
+                                {    0,      0,      0,  CYAN,  CYAN,      0,      0,      0,      0,      0,  CYAN,  CYAN,       0,      0,     0},
+                                {    0,      0,      0,     0,  CYAN,   CYAN,      0,      0,      0,   CYAN,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,      0,     0,     0,   CYAN,   CYAN,      0,   CYAN,   CYAN,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0}
     };
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
-            object->sprite[row][col] = array[row][col];
+            object->sprite[0][row][col] = array0[row][col];
         }
     }
-
+    //1st sprite (complete)
+    short int array1[16][15] = {{    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,  CYAN,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,  CYAN,       0,      0,     0},
+                                {    0,      0,      0,     0,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,      0,     0,     0,   CYAN,   CYAN,   CYAN,   CYAN,   CYAN,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,     0,  CYAN, YELLOW, YELLOW,   CYAN, YELLOW, YELLOW,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,      0,     0},
+                                { CYAN,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,  CYAN},
+                                {    0,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,     0},
+                                {    0,   CYAN, ORANGE,  CYAN,  CYAN,      0, ORANGE,      0, ORANGE,      0,  CYAN,  CYAN,  ORANGE,   CYAN,     0},
+                                { CYAN,   CYAN, ORANGE,  CYAN,     0,      0, ORANGE,      0, ORANGE,      0,     0,  CYAN,  ORANGE,   CYAN,  CYAN},
+                                { CYAN, ORANGE,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN, ORANGE,  CYAN},
+                                { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
+                                { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
+                                { CYAN,   CYAN,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN,   CYAN,  CYAN},
+                                {    0,   CYAN,   CYAN,     0,     0,      0,      0,      0,      0,      0,     0,     0,    CYAN,   CYAN,     0}
+    };
+    for (int row = 0; row < object->height; row++) {
+        for (int col = 0; col < object->length; col++) {
+            object->sprite[1][row][col] = array1[row][col];
+        }
+    }
+    //2nd sprite (incomplete)
+    short int array2[16][15] = {{    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,  CYAN,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,  CYAN,       0,      0,     0},
+                                {    0,      0,      0,     0,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,      0,     0,     0,   CYAN,   CYAN,   CYAN,   CYAN,   CYAN,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,     0,  CYAN, YELLOW, YELLOW,   CYAN, YELLOW, YELLOW,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,      0,     0},
+                                { CYAN,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,  CYAN},
+                                {    0,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,     0},
+                                {    0,   CYAN, ORANGE,  CYAN,  CYAN,      0, ORANGE,      0, ORANGE,      0,  CYAN,  CYAN,  ORANGE,   CYAN,     0},
+                                { CYAN,   CYAN, ORANGE,  CYAN,     0,      0, ORANGE,      0, ORANGE,      0,     0,  CYAN,  ORANGE,   CYAN,  CYAN},
+                                { CYAN, ORANGE,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN, ORANGE,  CYAN},
+                                { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
+                                { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
+                                { CYAN,   CYAN,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN,   CYAN,  CYAN},
+                                {    0,   CYAN,   CYAN,     0,     0,      0,      0,      0,      0,      0,     0,     0,    CYAN,   CYAN,     0}
+    };
+    for (int row = 0; row < object->height; row++) {
+        for (int col = 0; col < object->length; col++) {
+            object->sprite[2][row][col] = array2[row][col];
+        }
+    }
+    //3rd sprite (incomplete)
+    short int array3[16][15] = {{    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,  CYAN,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,  CYAN,       0,      0,     0},
+                                {    0,      0,      0,     0,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,      0,     0,     0,   CYAN,   CYAN,   CYAN,   CYAN,   CYAN,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,     0,  CYAN, YELLOW, YELLOW,   CYAN, YELLOW, YELLOW,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,      0,     0},
+                                { CYAN,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,  CYAN},
+                                {    0,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,     0},
+                                {    0,   CYAN, ORANGE,  CYAN,  CYAN,      0, ORANGE,      0, ORANGE,      0,  CYAN,  CYAN,  ORANGE,   CYAN,     0},
+                                { CYAN,   CYAN, ORANGE,  CYAN,     0,      0, ORANGE,      0, ORANGE,      0,     0,  CYAN,  ORANGE,   CYAN,  CYAN},
+                                { CYAN, ORANGE,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN, ORANGE,  CYAN},
+                                { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
+                                { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
+                                { CYAN,   CYAN,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN,   CYAN,  CYAN},
+                                {    0,   CYAN,   CYAN,     0,     0,      0,      0,      0,      0,      0,     0,     0,    CYAN,   CYAN,     0}
+    };
+    for (int row = 0; row < object->height; row++) {
+        for (int col = 0; col < object->length; col++) {
+            object->sprite[3][row][col] = array3[row][col];
+        }
+    }
+    //4th sprite (incomplete)
+    short int array4[16][15] = {{    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,  CYAN,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,  CYAN,       0,      0,     0},
+                                {    0,      0,      0,     0,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,      0,     0,     0,   CYAN,   CYAN,   CYAN,   CYAN,   CYAN,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,     0,  CYAN, YELLOW, YELLOW,   CYAN, YELLOW, YELLOW,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,      0,     0},
+                                { CYAN,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,  CYAN},
+                                {    0,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,     0},
+                                {    0,   CYAN, ORANGE,  CYAN,  CYAN,      0, ORANGE,      0, ORANGE,      0,  CYAN,  CYAN,  ORANGE,   CYAN,     0},
+                                { CYAN,   CYAN, ORANGE,  CYAN,     0,      0, ORANGE,      0, ORANGE,      0,     0,  CYAN,  ORANGE,   CYAN,  CYAN},
+                                { CYAN, ORANGE,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN, ORANGE,  CYAN},
+                                { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
+                                { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
+                                { CYAN,   CYAN,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN,   CYAN,  CYAN},
+                                {    0,   CYAN,   CYAN,     0,     0,      0,      0,      0,      0,      0,     0,     0,    CYAN,   CYAN,     0}
+    };
+    for (int row = 0; row < object->height; row++) {
+        for (int col = 0; col < object->length; col++) {
+            object->sprite[4][row][col] = array4[row][col];
+        }
+    }
+    //5th sprite (incomplete)
+    short int array5[16][15] = {{    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,  CYAN,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,  CYAN,       0,      0,     0},
+                                {    0,      0,      0,     0,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,      0,     0,     0,   CYAN,   CYAN,   CYAN,   CYAN,   CYAN,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,     0,  CYAN, YELLOW, YELLOW,   CYAN, YELLOW, YELLOW,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,      0,     0},
+                                { CYAN,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,  CYAN},
+                                {    0,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,     0},
+                                {    0,   CYAN, ORANGE,  CYAN,  CYAN,      0, ORANGE,      0, ORANGE,      0,  CYAN,  CYAN,  ORANGE,   CYAN,     0},
+                                { CYAN,   CYAN, ORANGE,  CYAN,     0,      0, ORANGE,      0, ORANGE,      0,     0,  CYAN,  ORANGE,   CYAN,  CYAN},
+                                { CYAN, ORANGE,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN, ORANGE,  CYAN},
+                                { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
+                                { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
+                                { CYAN,   CYAN,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN,   CYAN,  CYAN},
+                                {    0,   CYAN,   CYAN,     0,     0,      0,      0,      0,      0,      0,     0,     0,    CYAN,   CYAN,     0}
+    };
+    for (int row = 0; row < object->height; row++) {
+        for (int col = 0; col < object->length; col++) {
+            object->sprite[5][row][col] = array5[row][col];
+        }
+    }
+    //6th sprite (incomplete)
+    short int array6[16][15] = {{    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,  CYAN,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,  CYAN,       0,      0,     0},
+                                {    0,      0,      0,     0,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,      0,     0,     0,   CYAN,   CYAN,   CYAN,   CYAN,   CYAN,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,     0,  CYAN, YELLOW, YELLOW,   CYAN, YELLOW, YELLOW,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,      0,     0},
+                                { CYAN,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,  CYAN},
+                                {    0,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,     0},
+                                {    0,   CYAN, ORANGE,  CYAN,  CYAN,      0, ORANGE,      0, ORANGE,      0,  CYAN,  CYAN,  ORANGE,   CYAN,     0},
+                                { CYAN,   CYAN, ORANGE,  CYAN,     0,      0, ORANGE,      0, ORANGE,      0,     0,  CYAN,  ORANGE,   CYAN,  CYAN},
+                                { CYAN, ORANGE,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN, ORANGE,  CYAN},
+                                { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
+                                { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
+                                { CYAN,   CYAN,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN,   CYAN,  CYAN},
+                                {    0,   CYAN,   CYAN,     0,     0,      0,      0,      0,      0,      0,     0,     0,    CYAN,   CYAN,     0}
+    };
+    for (int row = 0; row < object->height; row++) {
+        for (int col = 0; col < object->length; col++) {
+            object->sprite[6][row][col] = array6[row][col];
+        }
+    }
+    //7th sprite (incomplete)
+    short int array7[16][15] = {{    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,  CYAN,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,  CYAN,       0,      0,     0},
+                                {    0,      0,      0,     0,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,      0,     0,     0,   CYAN,   CYAN,   CYAN,   CYAN,   CYAN,     0,     0,       0,      0,     0},
+                                {    0,      0,      0,     0,  CYAN, YELLOW, YELLOW,   CYAN, YELLOW, YELLOW,  CYAN,     0,       0,      0,     0},
+                                {    0,      0,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,      0,     0},
+                                { CYAN,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,  CYAN},
+                                {    0,   CYAN,   CYAN,  CYAN,  CYAN, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,  CYAN,  CYAN,    CYAN,   CYAN,     0},
+                                {    0,   CYAN, ORANGE,  CYAN,  CYAN,      0, ORANGE,      0, ORANGE,      0,  CYAN,  CYAN,  ORANGE,   CYAN,     0},
+                                { CYAN,   CYAN, ORANGE,  CYAN,     0,      0, ORANGE,      0, ORANGE,      0,     0,  CYAN,  ORANGE,   CYAN,  CYAN},
+                                { CYAN, ORANGE,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN, ORANGE,  CYAN},
+                                { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
+                                { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
+                                { CYAN,   CYAN,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN,   CYAN,  CYAN},
+                                {    0,   CYAN,   CYAN,     0,     0,      0,      0,      0,      0,      0,     0,     0,    CYAN,   CYAN,     0}
+    };
+    for (int row = 0; row < object->height; row++) {
+        for (int col = 0; col < object->length; col++) {
+            object->sprite[7][row][col] = array7[row][col];
+        }
+    }
 }
 
 void initializeGoeiGalaga(gameObject* object)
-{
-    short int array[16][15] = {{    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+{   
+    //0th sprite (incomplete)
+    short int array0[16][15] = {{    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
                                {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
                                {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
                                {    0,      0,      0,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,       0,      0,     0},
@@ -349,10 +659,170 @@ void initializeGoeiGalaga(gameObject* object)
     };
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
-            object->sprite[row][col] = array[row][col];
+            object->sprite[0][row][col] = array0[row][col];
         }
     }
-
+    //1st sprite (complete)
+    short int array1[16][15] = {{    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,       0,      0,     0},
+                               {    0,    RED,    RED,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,     RED,    RED,     0},
+                               {    0,    RED,    RED,   RED,     0,  WHITE,    RED,  WHITE,    RED,  WHITE,     0,   RED,     RED,    RED,     0},
+                               {    0,    RED,    RED,   RED,     0,  WHITE,  WHITE,  WHITE,  WHITE,  WHITE,     0,   RED,     RED,    RED,     0},
+                               {    0,      0,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,      0,     0},
+                               {    0,      0,      0,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,       0,      0,     0},
+                               {    0,      0,    RED,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,     RED,      0,     0},
+                               {    0,    RED,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,    RED,     0},
+                               {    0,      0,    RED,   RED,   RED,      0,   BLUE,   BLUE,   BLUE,      0,   RED,   RED,     RED,      0,     0},
+                               {    0,      0,      0,     0,   RED,      0,      0,      0,      0,      0,   RED,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0}
+    };
+    for (int row = 0; row < object->height; row++) {
+        for (int col = 0; col < object->length; col++) {
+            object->sprite[1][row][col] = array1[row][col];
+        }
+    }
+    //2nd sprite (incomplete)
+    short int array2[16][15] = {{    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,       0,      0,     0},
+                               {    0,    RED,    RED,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,     RED,    RED,     0},
+                               {    0,    RED,    RED,   RED,     0,  WHITE,    RED,  WHITE,    RED,  WHITE,     0,   RED,     RED,    RED,     0},
+                               {    0,    RED,    RED,   RED,     0,  WHITE,  WHITE,  WHITE,  WHITE,  WHITE,     0,   RED,     RED,    RED,     0},
+                               {    0,      0,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,      0,     0},
+                               {    0,      0,      0,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,       0,      0,     0},
+                               {    0,      0,    RED,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,     RED,      0,     0},
+                               {    0,    RED,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,    RED,     0},
+                               {    0,      0,    RED,   RED,   RED,      0,   BLUE,   BLUE,   BLUE,      0,   RED,   RED,     RED,      0,     0},
+                               {    0,      0,      0,     0,   RED,      0,      0,      0,      0,      0,   RED,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0}
+    };
+    for (int row = 0; row < object->height; row++) {
+        for (int col = 0; col < object->length; col++) {
+            object->sprite[2][row][col] = array2[row][col];
+        }
+    }
+    //3rd sprite (incomplete)
+    short int array3[16][15] = {{    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,       0,      0,     0},
+                               {    0,    RED,    RED,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,     RED,    RED,     0},
+                               {    0,    RED,    RED,   RED,     0,  WHITE,    RED,  WHITE,    RED,  WHITE,     0,   RED,     RED,    RED,     0},
+                               {    0,    RED,    RED,   RED,     0,  WHITE,  WHITE,  WHITE,  WHITE,  WHITE,     0,   RED,     RED,    RED,     0},
+                               {    0,      0,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,      0,     0},
+                               {    0,      0,      0,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,       0,      0,     0},
+                               {    0,      0,    RED,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,     RED,      0,     0},
+                               {    0,    RED,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,    RED,     0},
+                               {    0,      0,    RED,   RED,   RED,      0,   BLUE,   BLUE,   BLUE,      0,   RED,   RED,     RED,      0,     0},
+                               {    0,      0,      0,     0,   RED,      0,      0,      0,      0,      0,   RED,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0}
+    };
+    for (int row = 0; row < object->height; row++) {
+        for (int col = 0; col < object->length; col++) {
+            object->sprite[3][row][col] = array3[row][col];
+        }
+    }
+    //4th sprite (incomplete)
+    short int array4[16][15] = {{    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,       0,      0,     0},
+                               {    0,    RED,    RED,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,     RED,    RED,     0},
+                               {    0,    RED,    RED,   RED,     0,  WHITE,    RED,  WHITE,    RED,  WHITE,     0,   RED,     RED,    RED,     0},
+                               {    0,    RED,    RED,   RED,     0,  WHITE,  WHITE,  WHITE,  WHITE,  WHITE,     0,   RED,     RED,    RED,     0},
+                               {    0,      0,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,      0,     0},
+                               {    0,      0,      0,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,       0,      0,     0},
+                               {    0,      0,    RED,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,     RED,      0,     0},
+                               {    0,    RED,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,    RED,     0},
+                               {    0,      0,    RED,   RED,   RED,      0,   BLUE,   BLUE,   BLUE,      0,   RED,   RED,     RED,      0,     0},
+                               {    0,      0,      0,     0,   RED,      0,      0,      0,      0,      0,   RED,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0}
+    };
+    for (int row = 0; row < object->height; row++) {
+        for (int col = 0; col < object->length; col++) {
+            object->sprite[4][row][col] = array4[row][col];
+        }
+    }
+    //5th sprite (incomplete)
+    short int array5[16][15] = {{    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,       0,      0,     0},
+                               {    0,    RED,    RED,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,     RED,    RED,     0},
+                               {    0,    RED,    RED,   RED,     0,  WHITE,    RED,  WHITE,    RED,  WHITE,     0,   RED,     RED,    RED,     0},
+                               {    0,    RED,    RED,   RED,     0,  WHITE,  WHITE,  WHITE,  WHITE,  WHITE,     0,   RED,     RED,    RED,     0},
+                               {    0,      0,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,      0,     0},
+                               {    0,      0,      0,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,       0,      0,     0},
+                               {    0,      0,    RED,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,     RED,      0,     0},
+                               {    0,    RED,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,    RED,     0},
+                               {    0,      0,    RED,   RED,   RED,      0,   BLUE,   BLUE,   BLUE,      0,   RED,   RED,     RED,      0,     0},
+                               {    0,      0,      0,     0,   RED,      0,      0,      0,      0,      0,   RED,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0}
+    };
+    for (int row = 0; row < object->height; row++) {
+        for (int col = 0; col < object->length; col++) {
+            object->sprite[5][row][col] = array5[row][col];
+        }
+    }
+    //6th sprite (incomplete)
+    short int array6[16][15] = {{    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,       0,      0,     0},
+                               {    0,    RED,    RED,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,     RED,    RED,     0},
+                               {    0,    RED,    RED,   RED,     0,  WHITE,    RED,  WHITE,    RED,  WHITE,     0,   RED,     RED,    RED,     0},
+                               {    0,    RED,    RED,   RED,     0,  WHITE,  WHITE,  WHITE,  WHITE,  WHITE,     0,   RED,     RED,    RED,     0},
+                               {    0,      0,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,      0,     0},
+                               {    0,      0,      0,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,       0,      0,     0},
+                               {    0,      0,    RED,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,     RED,      0,     0},
+                               {    0,    RED,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,    RED,     0},
+                               {    0,      0,    RED,   RED,   RED,      0,   BLUE,   BLUE,   BLUE,      0,   RED,   RED,     RED,      0,     0},
+                               {    0,      0,      0,     0,   RED,      0,      0,      0,      0,      0,   RED,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0}
+    };
+    for (int row = 0; row < object->height; row++) {
+        for (int col = 0; col < object->length; col++) {
+            object->sprite[6][row][col] = array6[row][col];
+        }
+    }
+    //7th sprite (incomplete)
+    short int array7[16][15] = {{    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,       0,      0,     0},
+                               {    0,    RED,    RED,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,     RED,    RED,     0},
+                               {    0,    RED,    RED,   RED,     0,  WHITE,    RED,  WHITE,    RED,  WHITE,     0,   RED,     RED,    RED,     0},
+                               {    0,    RED,    RED,   RED,     0,  WHITE,  WHITE,  WHITE,  WHITE,  WHITE,     0,   RED,     RED,    RED,     0},
+                               {    0,      0,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,      0,     0},
+                               {    0,      0,      0,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,       0,      0,     0},
+                               {    0,      0,    RED,   RED,   RED,    RED,   BLUE,   BLUE,   BLUE,    RED,   RED,   RED,     RED,      0,     0},
+                               {    0,    RED,    RED,   RED,   RED,    RED,  WHITE,  WHITE,  WHITE,    RED,   RED,   RED,     RED,    RED,     0},
+                               {    0,      0,    RED,   RED,   RED,      0,   BLUE,   BLUE,   BLUE,      0,   RED,   RED,     RED,      0,     0},
+                               {    0,      0,      0,     0,   RED,      0,      0,      0,      0,      0,   RED,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0}
+    };
+    for (int row = 0; row < object->height; row++) {
+        for (int col = 0; col < object->length; col++) {
+            object->sprite[7][row][col] = array7[row][col];
+        }
+    }
 }
 
 //rect functions
