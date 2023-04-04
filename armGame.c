@@ -313,6 +313,7 @@ void initializeBossGalaga(gameObject* object) {
 
 void initializeGoeiGalaga(gameObject* object) {
     short int array[16][15] = {{    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
+                               {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0}
                                {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
                                {    0,      0,      0,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,       0,      0,     0},
                                {    0,    RED,    RED,   RED,     0,      0,   BLUE,      0,   BLUE,      0,     0,   RED,     RED,    RED,     0},
@@ -326,7 +327,6 @@ void initializeGoeiGalaga(gameObject* object) {
                                {    0,      0,      0,     0,   RED,      0,      0,      0,      0,      0,   RED,     0,       0,      0,     0},
                                {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
                                { CYAN, ORANGE,   CYAN,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,    CYAN, ORANGE,  CYAN},
-                               { CYAN, ORANGE, ORANGE,  CYAN,     0,      0,      0,      0,      0,      0,     0,  CYAN,  ORANGE, ORANGE,  CYAN},
                                {    0,   CYAN,   CYAN,     0,     0,      0,      0,      0,      0,      0,     0,     0,    CYAN,   CYAN,     0}
     };
     for (int row = 0; row < object->height; row++) {
