@@ -87,14 +87,15 @@ void initializeGoeiGalaga(gameObject* object);
 rect createRect(int x_, int y_, int length_, int height_, short int colour_);
 void setRectPos(rect* rect_, int x_, int y_);
 void drawRect(rect rect_);
-void eraseOldRect(rect rect_);
 void eraseRect(rect rect_);
+void eraseOldRect(rect rect_);
 bool x_outOfBounds(rect rect_, int leftBound, int rightBound);
 bool y_outOfBounds(rect rect_, int upperBound, int lowerBound);
 bool contact(rect topLeft, rect bottomRight);
 void updatePos(rect* _rect);
 void setBottom(rect* _rect, int topBoundary);
 
+//vga functions
 void clear_screen();
 void plot_pixel(int x, int y, short int line_color);
 void draw_line(int x0, int y0, int x1, int y1, short int colour);
@@ -234,8 +235,17 @@ int main(void)
 
 // code for subroutines (not shown)
 
+//basic functions
+void swap(int* a, int* b) 
+{
+    int temp = *b;
+    *b = *a;
+    *a = temp;
+}
+
 //gameObject functions
-gameObject createObject(int length_, int height_) {
+gameObject createObject(int length_, int height_)
+{
     gameObject object;
     object.length = length_;
     object.height = height_;
@@ -244,11 +254,13 @@ gameObject createObject(int length_, int height_) {
     return object;
 }
 
-void setObjectPos(gameObject* object, int x_, int y_) {
+void setObjectPos(gameObject* object, int x_, int y_)
+{
     setRectPos(&object->hitbox, x_, y_);
 }
 
-void drawObject(gameObject object) {
+void drawObject(gameObject object)
+{
     for (int row = 0; row < object.height; row++) {
         for (int col = 0; col < object.length; col++) {
             //plot_pixel(object.hitbox.x + col, object.hitbox.y + row, object.sprite[row][col]);
@@ -261,7 +273,9 @@ void drawObject(gameObject object) {
     }
 }
 
-void initializePlayer(gameObject* object) {
+//assets
+void initializePlayer(gameObject* object)
+{
     short int array[16][15] = {{    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
                                {    0,     0,     0,     0,     0,     0,     0, WHITE,     0,     0,     0,     0,       0,     0,     0},
@@ -287,7 +301,8 @@ void initializePlayer(gameObject* object) {
 
 }
 
-void initializeBossGalaga(gameObject* object) {
+void initializeBossGalaga(gameObject* object)
+{
     short int array[16][15] = {{    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
                                {    0,      0,      0,     0,     0,      0,   CYAN,      0,   CYAN,      0,     0,     0,       0,      0,     0},
                                {    0,      0,      0,  CYAN,  CYAN, ORANGE, ORANGE,   CYAN, ORANGE, ORANGE,  CYAN,  CYAN,       0,      0,     0},
@@ -313,7 +328,8 @@ void initializeBossGalaga(gameObject* object) {
 
 }
 
-void initializeGoeiGalaga(gameObject* object) {
+void initializeGoeiGalaga(gameObject* object)
+{
     short int array[16][15] = {{    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
                                {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
                                {    0,      0,      0,     0,     0,      0,      0,      0,      0,      0,     0,     0,       0,      0,     0},
@@ -339,28 +355,43 @@ void initializeGoeiGalaga(gameObject* object) {
 
 }
 
-
-void setBottom(rect* _rect, int topBoundary) {
-    _rect->y = topBoundary - _rect->height;
-    _rect->top = _rect->y;
-    _rect->bottom = topBoundary;
-}
-
-void updatePos(rect* _rect) {
-    _rect->x += _rect->dx;
-    _rect->y += _rect->dy;
-    _rect->top += _rect->dy;
-    _rect->bottom += _rect->dy;
-    _rect->left += _rect->dx;
-    _rect->right += _rect->x;
-}
-
-bool contact(rect topLeft, rect bottomRight) 
+//rect functions
+rect createRect(int x_, int y_, int length_, int height_, short int colour_) 
 {
-    if ((topLeft.right >= bottomRight.left) && (topLeft.bottom >= bottomRight.top)) {
-        return true;
-    } else {
-        return false;
+    rect box = {x_, y_, length_, height_, colour_, 0, 0, 0, 0, x_, x_ + length_, y_, y_ + height_};
+    return box;
+}
+
+void setRectPos(rect* rect_, int x_, int y_) 
+{
+    rect_->old_x = rect_->x;
+    rect_->old_y = rect_->y;
+    rect_->x = x_;
+    rect_->y = y_;
+    rect_->left = x_;
+    rect_->right = x_ + rect_->length;
+    rect_->top = y_;
+    rect_->bottom = y_ + rect_->height;
+}
+
+void drawRect(rect rect_) 
+{
+    for (int i = 0; i < rect_.height; i++) {
+        draw_line(rect_.x, rect_.y + i, rect_.x + rect_.length - 1, rect_.y + i, rect_.colour);
+    }
+}
+
+void eraseRect(rect rect_) 
+{
+    for (int i = 0; i < rect_.height; i++) {
+        draw_line(rect_.x, rect_.y + i, rect_.x + rect_.length - 1, rect_.y + i, 0);
+    }
+}
+
+void eraseOldRect(rect rect_) 
+{
+    for (int i = 0; i < rect_.height; i++) {
+        draw_line(rect_.old_x, rect_.old_y + i, rect_.old_x + rect_.length - 1, rect_.old_y + i, 0);
     }
 }
 
@@ -383,53 +414,33 @@ bool y_outOfBounds(rect rect_, int upperBound, int lowerBound)
     }
 }
 
-rect createRect(int x_, int y_, int length_, int height_, short int colour_) 
+bool contact(rect topLeft, rect bottomRight) 
 {
-    rect box = {x_, y_, length_, height_, colour_, 0, 0, 0, 0, x_, x_ + length_, y_, y_ + height_};
-    return box;
-}
-
-void setRectPos(rect* rect_, int x_, int y_) {
-    rect_->old_x = rect_->x;
-    rect_->old_y = rect_->y;
-    rect_->x = x_;
-    rect_->y = y_;
-    rect_->left = x_;
-    rect_->right = x_ + rect_->length;
-    rect_->top = y_;
-    rect_->bottom = y_ + rect_->height;
-}
-
-void drawRect(rect rect_) 
-{
-    for (int i = 0; i < rect_.height; i++) {
-        draw_line(rect_.x, rect_.y + i, rect_.x + rect_.length - 1, rect_.y + i, rect_.colour);
+    if ((topLeft.right >= bottomRight.left) && (topLeft.bottom >= bottomRight.top)) {
+        return true;
+    } else {
+        return false;
     }
 }
 
-void eraseOldRect(rect rect_) 
+void updatePos(rect* _rect)
 {
-    for (int i = 0; i < rect_.height; i++) {
-        draw_line(rect_.old_x, rect_.old_y + i, rect_.old_x + rect_.length - 1, rect_.old_y + i, 0);
-    }
+    _rect->x += _rect->dx;
+    _rect->y += _rect->dy;
+    _rect->top += _rect->dy;
+    _rect->bottom += _rect->dy;
+    _rect->left += _rect->dx;
+    _rect->right += _rect->x;
 }
 
-void eraseRect(rect rect_) 
+void setBottom(rect* _rect, int topBoundary)
 {
-    for (int i = 0; i < rect_.height; i++) {
-        draw_line(rect_.x, rect_.y + i, rect_.x + rect_.length - 1, rect_.y + i, 0);
-    }
+    _rect->y = topBoundary - _rect->height;
+    _rect->top = _rect->y;
+    _rect->bottom = topBoundary;
 }
 
-void wait_for_vsync(volatile int status, volatile int* frontBuffAddr) 
-{
-
-    while((status = (*(frontBuffAddr + 3) & 0x01)) != 0) {
-        continue;
-    }
-    
-}
-
+//vga functions
 void clear_screen() 
 {
     for (int i = 0; i < SCREEN_W; i++) {
@@ -437,6 +448,11 @@ void clear_screen()
             plot_pixel(i, j, 0);//plot black pixels
         }
     }
+}
+
+void plot_pixel(int x, int y, short int line_color)
+{
+    *(short int *)(pixel_buffer_start + (y << 10) + (x << 1)) = line_color;
 }
 
 void draw_line(int x0, int y0, int x1, int y1, short int colour) 
@@ -479,14 +495,12 @@ void draw_line(int x0, int y0, int x1, int y1, short int colour)
     }
 }
 
-void swap(int* a, int* b) 
+void wait_for_vsync(volatile int status, volatile int* frontBuffAddr) 
 {
-    int temp = *b;
-    *b = *a;
-    *a = temp;
+
+    while((status = (*(frontBuffAddr + 3) & 0x01)) != 0) {
+        continue;
+    }
+    
 }
 
-void plot_pixel(int x, int y, short int line_color)
-{
-    *(short int *)(pixel_buffer_start + (y << 10) + (x << 1)) = line_color;
-}
