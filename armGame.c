@@ -36,10 +36,6 @@
 #define SCREEN_W 320
 #define SCREEN_H 240
 
-/* Constants for animation */
-#define BOX_LEN 2
-#define NUM_BOXES 8
-
 #define FALSE 0
 #define TRUE 1
 
@@ -105,7 +101,7 @@ void setBottom(rect* _rect, int topBoundary);
 void clear_screen();
 void plot_pixel(int x, int y, short int line_color);
 void draw_line(int x0, int y0, int x1, int y1, short int colour);
-void waitForVSync(volatile int status, volatile int* frontBuffAddr);
+void wait_for_vsync(volatile int status, volatile int* frontBuffAddr);
 
 volatile int pixel_buffer_start; // global variable
 int pixelSize = 1;
@@ -113,14 +109,13 @@ int timer = 0;
 
 int main(void)
 {
-    volatile int* pixel_ctrl_ptr = (int*)0xFF203020;
+    //volatile int* pixel_ctrl_ptr = (int*)0xFF203020;
     volatile int* keysBaseAddr = (int*) KEY_BASE;
     
     // declare other variables(not shown)
     volatile int* frontBuffAddr = (int*)0xFF203020;//front buffer register address
     volatile int* backBuffAddr = (int*)(frontBuffAddr + 1);
     volatile int status = (*(frontBuffAddr + 3) & 0x01);//1 if VGA not done frame, 0 if VGA done frame
-    int numBoxes = 8;
     srand(time(NULL));//seed random numbers based on time
 
     /* set front pixel buffer to start of FPGA On-chip memory */
@@ -1034,9 +1029,9 @@ void setRectPos(rect* rect_, int x_, int y_)
     rect_->x = x_;
     rect_->y = y_;
     rect_->left = x_;
-    rect_->right = x_ + rect_->length;
+    rect_->right = x_ + rect_->length - 1;
     rect_->top = y_;
-    rect_->bottom = y_ + rect_->height;
+    rect_->bottom = y_ + rect_->height - 1;
 }
 
 void drawRect(rect rect_) 
@@ -1062,7 +1057,6 @@ void eraseOldRect(rect rect_)
 
 bool x_outOfBounds(rect rect_, int leftBound, int rightBound) 
 {
-
     if (((rect_.x + rect_.dx) > (rightBound - rect_.length)) || ((rect_.x + rect_.dx) < leftBound)) {
         return true;
     } else {
@@ -1092,10 +1086,10 @@ void updatePos(rect* _rect)
 {
     _rect->x = _rect->x + _rect->dx;
     _rect->y = _rect->y + _rect->dy;
-    _rect->top += _rect->dy;
-    _rect->bottom += _rect->dy;
-    _rect->left += _rect->dx;
-    _rect->right += _rect->x;
+    _rect->top = _rect->y;
+    _rect->bottom = _rect->y + _rect->height - 1;
+    _rect->left = _rect->x;
+    _rect->right = _rect->x + _rect->length - 1;
 }
 
 void setBottom(rect* _rect, int topBoundary)
