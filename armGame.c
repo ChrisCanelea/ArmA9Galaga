@@ -75,7 +75,7 @@ typedef struct bullet
     int length;
     int height;
     rect hitbox;
-    short int sprite[8][3]
+    short int sprite[8][3];
 } bullet;
 
 //basic functions
