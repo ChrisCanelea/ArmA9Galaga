@@ -70,12 +70,21 @@ typedef struct gameObject
     short int sprite[8][16][16];
 } gameObject;
 
+typedef struct bullet
+{
+    int length;
+    int height;
+    rect hitbox;
+    short int sprite[8][3]
+} bullet;
+
 //basic functions
 void swap(int* a, int* b);
 
 ///main loop functions
 void titleScreen();
 int gameLoop();
+void drawStars();
 
 //gameObject functions
 gameObject createObject(int length_, int height_);
@@ -83,11 +92,20 @@ void setObjectPos(gameObject* object, int x_, int y_);
 void drawObject(gameObject object, int spriteNum);
 void eraseOldObject(gameObject object);
 
+//bullet functions
+bullet createBullet(int length_, int height_);
+void setBulletPos(bullet* object, int x_, int y_);
+void drawBullet(bullet object);
+void eraseOldBullet(bullet object);
+
+
 //assets
 void initializePlayer(gameObject* object);
 void initializeBossGalaga(gameObject* object);
 void initializeGoeiGalaga(gameObject* object);
 void initializeZakoGalaga(gameObject* object);
+
+void initializePlayerBullet(bullet* object);
 
 //rect functions
 rect createRect(int x_, int y_, int length_, int height_, short int colour_);
@@ -178,6 +196,10 @@ int gameLoop() {
     initializePlayer(&player);
     setObjectPos(&player, 0, 220);
 
+    bullet playerBullet = createBullet(3, 8);
+    initializePlayerBullet(&playerBullet);
+    setBulletPos(&playerBullet, 100, 100);
+
     gameObject bossGalaga = createObject(16, 16);
     initializeBossGalaga(&bossGalaga);
     setObjectPos(&bossGalaga, 20, 0);
@@ -250,7 +272,9 @@ int gameLoop() {
         // drawRect(square);
         //drawRect(ground);
 
+        drawStars();
         drawObject(player, 1);
+        drawBullet(playerBullet);
         drawObject(bossGalaga, (timer/8)%2);
         drawObject(goeiGalaga, (timer/8)%2);
         drawObject(zakoGalaga, (timer/8)%2);
@@ -262,6 +286,10 @@ int gameLoop() {
         wait_for_vsync(status, frontBuffAddr); //wait for VGA vertical sync
         pixel_buffer_start = *backBuffAddr; // new back buffer
     }
+
+}
+
+void drawStars() {
 
 }
 
@@ -296,6 +324,39 @@ void drawObject(gameObject object, int spriteNum)
 }
 
 void eraseOldObject(gameObject object) {
+    for (int i = 0; i < object.height; i++) {
+        for (int j = 0; j < object.length; j++) {
+            plot_pixel(object.hitbox.old_x + i, object.hitbox.old_y + j, 0);
+        }
+    }
+}
+
+//bullet functions
+bullet createBullet(int length_, int height_) {
+    bullet object;
+    object.length = length_;
+    object.height = height_;
+    object.hitbox = createRect(0, 0, length_, height_, 0);
+    return object;
+}
+
+void setBulletPos(bullet* object, int x_, int y_) {
+    setRectPos(&object->hitbox, x_, y_);
+}
+
+void drawBullet(bullet object) {
+    for (int row = 0; row < object.height; row++) {
+        for (int col = 0; col < object.length; col++) {
+            for (int i = 0; i < pixelSize; i++) {
+                for (int j = 0; j < pixelSize; j++) {
+                    plot_pixel(pixelSize*(object.hitbox.x + col) + i, pixelSize*(object.hitbox.y + row) + j, object.sprite[row][col]);
+                }
+            }
+        }
+    }
+}
+
+void eraseOldBullet(bullet object) {
     for (int i = 0; i < object.height; i++) {
         for (int j = 0; j < object.length; j++) {
             plot_pixel(object.hitbox.old_x + i, object.hitbox.old_y + j, 0);
@@ -1036,6 +1097,23 @@ void initializeZakoGalaga(gameObject* object)
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
             object->sprite[7][row][col] = array7[row][col];
+        }
+    }
+}
+
+void initializePlayerBullet(bullet* object) {
+    short int array[8][3] = {{0x0000, 0x035c, 0x0000},
+                             {0x0000, 0x035c, 0x0000},
+                             {0x035c, 0x035c, 0x035c},
+                             {0x035c,  WHITE, 0x035c},
+                             {0x0000, 0xF800, 0x0000},
+                             {0x0000, 0xF800, 0x0000},
+                             {0x0000, 0xF800, 0x0000},
+                             {0x0000, 0xF800, 0x0000}
+    };
+    for (int row = 0; row < object->height; row++) {
+        for (int col = 0; col < object->length; col++) {
+            object->sprite[row][col] = array[row][col];
         }
     }
 }
