@@ -73,6 +73,10 @@ typedef struct gameObject
 //basic functions
 void swap(int* a, int* b);
 
+///main loop functions
+void titleScreen();
+int gameLoop();
+
 //gameObject functions
 gameObject createObject(int length_, int height_);
 void setObjectPos(gameObject* object, int x_, int y_);
@@ -106,16 +110,20 @@ void wait_for_vsync(volatile int status, volatile int* frontBuffAddr);
 volatile int pixel_buffer_start; // global variable
 int pixelSize = 1;
 int timer = 0;
+volatile int* keysBaseAddr;
+volatile int* frontBuffAddr;
+volatile int* backBuffAddr;
+volatile int status;
 
 int main(void)
 {
     //volatile int* pixel_ctrl_ptr = (int*)0xFF203020;
-    volatile int* keysBaseAddr = (int*) KEY_BASE;
+    keysBaseAddr = (int*) KEY_BASE;
     
     // declare other variables(not shown)
-    volatile int* frontBuffAddr = (int*)0xFF203020;//front buffer register address
-    volatile int* backBuffAddr = (int*)(frontBuffAddr + 1);
-    volatile int status = (*(frontBuffAddr + 3) & 0x01);//1 if VGA not done frame, 0 if VGA done frame
+    frontBuffAddr = (int*)0xFF203020;//front buffer register address
+    backBuffAddr = (int*)(frontBuffAddr + 1);
+    status = (*(frontBuffAddr + 3) & 0x01);//1 if VGA not done frame, 0 if VGA done frame
     srand(time(NULL));//seed random numbers based on time
 
     /* set front pixel buffer to start of FPGA On-chip memory */
@@ -135,6 +143,36 @@ int main(void)
     pixel_buffer_start = *(backBuffAddr); // we draw on the back buffer
     clear_screen(); // pixel_buffer_start points to the pixel buffer
 
+    //swap buffers once before starting main game loop
+    *frontBuffAddr = 1;
+    wait_for_vsync(status, frontBuffAddr);
+    pixel_buffer_start = *backBuffAddr;
+
+    titleScreen();
+    gameLoop();
+}
+
+// code for subroutines (not shown)
+
+//basic functions
+void swap(int* a, int* b) 
+{
+    int temp = *b;
+    *b = *a;
+    *a = temp;
+}
+
+//main loop functions
+void titleScreen() {
+    bool gameStart = FALSE;
+    while (!gameStart) {
+        gameStart = TRUE;
+    }
+}
+
+int gameLoop() {
+    bool gameOver = FALSE;
+
     //initialize game objects
     gameObject player = createObject(16, 16);
     initializePlayer(&player);
@@ -151,14 +189,10 @@ int main(void)
     gameObject zakoGalaga = createObject(16, 16);
     initializeZakoGalaga(&zakoGalaga);
     setObjectPos(&zakoGalaga, 60, 0);
+    
+    while (!gameOver)
+    {   
 
-    //swap buffers once before starting main game loop
-    *frontBuffAddr = 1;
-    wait_for_vsync(status, frontBuffAddr);
-    pixel_buffer_start = *backBuffAddr;
-
-    while (1)
-    {
         //Erase objects from previous iteration
         eraseOldObject(player);
 
@@ -217,9 +251,9 @@ int main(void)
         //drawRect(ground);
 
         drawObject(player, 1);
-        drawObject(bossGalaga, (timer/10)%2);
-        drawObject(goeiGalaga, (timer/10)%2);
-        drawObject(zakoGalaga, (timer/10)%2);
+        drawObject(bossGalaga, (timer/8)%2);
+        drawObject(goeiGalaga, (timer/8)%2);
+        drawObject(zakoGalaga, (timer/8)%2);
         
         timer = timer + 1;
 
@@ -228,16 +262,7 @@ int main(void)
         wait_for_vsync(status, frontBuffAddr); //wait for VGA vertical sync
         pixel_buffer_start = *backBuffAddr; // new back buffer
     }
-}
 
-// code for subroutines (not shown)
-
-//basic functions
-void swap(int* a, int* b) 
-{
-    int temp = *b;
-    *b = *a;
-    *a = temp;
 }
 
 //gameObject functions
