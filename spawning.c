@@ -292,20 +292,59 @@ int gameLoop() {
             }
 
             if (bossLine[i].hitbox.y > 0) {
-                drawObject(bossLine[i], 1);
+                drawObject(bossLine[i], 1); // (timer/8)%2
             }
+
             updatePos(&bossLine[i].hitbox);
         }
 
-        // for (int i = 0; i < 8; i++) {
-        //     drawObject(goeiLine1[i], (timer/8)%2);
-        //     drawObject(goeiLine2[i], (timer/8)%2);
-        // }
+        for (int i = 0; i < 8; i++) {
+            if (goeiLine1[i].hitbox.y < 32) {
+                goeiLine1[i].hitbox.dy = 1;
+            } else {
+                goeiLine1[i].hitbox.dy = 0;
+            }
+
+            if (goeiLine2[i].hitbox.y < 48) {
+                goeiLine2[i].hitbox.dy = 1;
+            } else {
+                goeiLine2[i].hitbox.dy = 0;
+            }
+
+            if (goeiLine1[i].hitbox.y > 0) {
+                drawObject(goeiLine1[i], 1);
+            }
+            if (goeiLine2[i].hitbox.y > 0) {
+                drawObject(goeiLine2[i], 1);
+            }
+
+            updatePos(&goeiLine1[i].hitbox);
+            updatePos(&goeiLine2[i].hitbox);
+        }
         
-        // for (int i = 0; i < 10; i++) {
-        //     drawObject(zakoLine1[i], (timer/8)%2);
-        //     drawObject(zakoLine2[i], (timer/8)%2);
-        // }
+        for (int i = 0; i < 10; i++) {
+            if (zakoLine1[i].hitbox.y < 64) {
+                zakoLine1[i].hitbox.dy = 1;
+            } else {
+                zakoLine1[i].hitbox.dy = 0;
+            }
+            
+            if (zakoLine2[i].hitbox.y < 80) {
+                zakoLine2[i].hitbox.dy = 1;
+            } else {
+                zakoLine2[i].hitbox.dy = 0;
+            }
+
+            if (zakoLine1[i].hitbox.y > 0) {
+                drawObject(zakoLine1[i], 1);
+            }
+            if (zakoLine2[i].hitbox.y > 0) {
+                drawObject(zakoLine2[i], 1);
+            }
+
+            updatePos(&zakoLine1[i].hitbox);
+            updatePos(&zakoLine2[i].hitbox);
+        }
         
         timer = timer + 1;
 
