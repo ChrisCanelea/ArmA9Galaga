@@ -200,7 +200,7 @@ int gameLoop() {
     //initialize game objects
     gameObject player = createObject(16, 16);
     initializePlayer(&player);
-    setObjectPos(&player, 0, 220);
+    setObjectPos(&player, 104, 220);
 
     gameObject bossLine[4];
     gameObject goeiLine1[8];
@@ -224,12 +224,43 @@ int gameLoop() {
         //Erase objects from previous iteration
         eraseOldObject(player);
         
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 4; i++) { // delete boss
             if (bossLine[i].hitbox.y > 0) {
-                eraseOldObject(bossLine[i]);
+                // eraseOldObject(bossLine[i]);
+                for (int j = 0; j < 16; j++) {
+                    for (int k = 0; k < 16; k++) {
+                        plot_pixel(bossLine[i].hitbox.old_x + j, bossLine[i].hitbox.old_y + k, 0);
+                    }
+                }
             }
             bossLine[i].hitbox.old_x = bossLine[i].hitbox.x;
             bossLine[i].hitbox.old_y = bossLine[i].hitbox.y;
+        }
+
+        for (int i = 0; i < 8; i++) { // delete goei
+            if (goeiLine1[i].hitbox.y > 0) {
+                eraseOldObject(goeiLine1[i]);
+            }
+            goeiLine1[i].hitbox.old_x = goeiLine1[i].hitbox.x;
+            goeiLine1[i].hitbox.old_y = goeiLine1[i].hitbox.y;
+            if (goeiLine2[i].hitbox.y > 0) {
+                eraseOldObject(goeiLine2[i]);
+            }
+            goeiLine2[i].hitbox.old_x = goeiLine2[i].hitbox.x;
+            goeiLine2[i].hitbox.old_y = goeiLine2[i].hitbox.y;
+        }
+
+        for (int i = 0; i < 10; i++) { // delete zako
+            if (zakoLine1[i].hitbox.y > 0) {
+                eraseOldObject(zakoLine1[i]);
+            }
+            zakoLine1[i].hitbox.old_x = zakoLine1[i].hitbox.x;
+            zakoLine1[i].hitbox.old_y = zakoLine1[i].hitbox.y;
+            if (zakoLine2[i].hitbox.y > 0) {
+                eraseOldObject(zakoLine2[i]);
+            }
+            zakoLine2[i].hitbox.old_x = zakoLine2[i].hitbox.x;
+            zakoLine2[i].hitbox.old_y = zakoLine2[i].hitbox.y;
         }
 
         //set "old" values to current values
@@ -361,7 +392,7 @@ void initializeBossLine(gameObject* bossLine) {
     for (int i = 0; i < 4; i++) {
         bossLine[i] = createObject(16,16);
         initializeBossGalaga(&bossLine[i]);
-        setObjectPos(&bossLine[i], 80 + (16*i), -96);
+        setObjectPos(&bossLine[i], 80 + (16*i), -80);
     }
 }
 
@@ -369,7 +400,7 @@ void initializeGoeiLine(gameObject* goeiLine, int lineNumber) {
     for (int i = 0; i < 8; i++) {
         goeiLine[i] = createObject(16, 16);
         initializeGoeiGalaga(&goeiLine[i]);
-        setObjectPos(&goeiLine[i], 48 + (16*i), -80 + (16*lineNumber));
+        setObjectPos(&goeiLine[i], 48 + (16*i), -72 + (16*lineNumber));
     }
 }
 
