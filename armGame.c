@@ -76,39 +76,40 @@ typedef struct bullet
     int height;
     rect hitbox;
     short int sprite[8][3];
+    bool isMoving;
 } bullet;
 
 //basic functions
 void swap(int* a, int* b);
 
-///main loop functions
+//main loop functions
 void titleScreen();
 int gameLoop();
-void drawStars();
+void initializeStars(int stars[2][224]);
+
+void initializeBossLine(gameObject* bossLine);
+void initializeGoeiLine(gameObject* goeiLine, int lineNumber);
+void initializeZakoLine(gameObject* zakoLine, int lineNumber);
 
 //gameObject functions
 gameObject createObject(int length_, int height_);
 void setObjectPos(gameObject* object, int x_, int y_);
-void updateObjectPos(gameObject* object);
 void drawObject(gameObject object, int spriteNum);
-void eraseObject(gameObject object);
 void eraseOldObject(gameObject object);
+void updateObjectPos(gameObject* object);
 
 //bullet functions
 bullet createBullet(int length_, int height_);
 void setBulletPos(bullet* object, int x_, int y_);
-void updateBulletPos(bullet* object);
 void drawBullet(bullet object);
-void eraseBullet(bullet object);
 void eraseOldBullet(bullet object);
-
+void updateBulletPos(bullet* object);
 
 //assets
 void initializePlayer(gameObject* object);
 void initializeBossGalaga(gameObject* object);
 void initializeGoeiGalaga(gameObject* object);
 void initializeZakoGalaga(gameObject* object);
-
 void initializePlayerBullet(bullet* object);
 
 //rect functions
@@ -187,64 +188,100 @@ void swap(int* a, int* b)
 //main loop functions
 void titleScreen() {
     bool gameStart = FALSE;
+    clear_screen();
     while (!gameStart) {
-        gameStart = TRUE;
+        // if (*(keysBaseAddr + 3) & 0xF) {
+        //     *(keysBaseAddr + 3) = 0xF;
+            gameStart = TRUE;
+        // }
     }
 }
 
 int gameLoop() {
     bool gameOver = FALSE;
-    bool shoot = FALSE;
-    int numBullets = 1;
+    int numBullets = 2;
+    int shotTimer = 2;
 
     //initialize game objects
     gameObject player = createObject(16, 16);
     initializePlayer(&player);
-    setObjectPos(&player, 0, 220);
+    setObjectPos(&player, 104, 220);
 
-    bullet playerBullet;
-    playerBullet = createBullet(3, 8);
-    initializePlayerBullet(&playerBullet);
-    playerBullet.hitbox.dy = -3;
+    bullet playerBullet[2];
+    playerBullet[0] = createBullet(3, 8);
+    playerBullet[1] = createBullet(3, 8);
+    initializePlayerBullet(&playerBullet[0]);
+    initializePlayerBullet(&playerBullet[1]);
+    setBulletPos(&playerBullet[0], player.hitbox.x + 6, player.hitbox.y);
+    setBulletPos(&playerBullet[1], player.hitbox.x + 6, player.hitbox.y);
+    playerBullet[0].hitbox.dy = -3;
+    playerBullet[1].hitbox.dy = -3;
 
-    gameObject bossGalaga = createObject(16, 16);
-    initializeBossGalaga(&bossGalaga);
-    setObjectPos(&bossGalaga, 20, 0);
-    
-    gameObject goeiGalaga = createObject(16, 16);
-    initializeGoeiGalaga(&goeiGalaga);
-    setObjectPos(&goeiGalaga, 40, 0);
+    gameObject bossLine[4];
+    gameObject goeiLine1[8];
+    gameObject goeiLine2[8];
+    gameObject zakoLine1[10];
+    gameObject zakoLine2[10];
 
-    gameObject zakoGalaga = createObject(16, 16);
-    initializeZakoGalaga(&zakoGalaga);
-    setObjectPos(&zakoGalaga, 60, 0);
-    
+    int stars[2][224];
+
+    initializeBossLine(bossLine);
+    initializeGoeiLine(goeiLine1, 1);
+    initializeGoeiLine(goeiLine2, 2);
+    initializeZakoLine(zakoLine1, 1);
+    initializeZakoLine(zakoLine2, 2);
+
+    initializeStars(&stars);
+
     while (!gameOver)
     {   
-        //THIS SECTION TAKES CARE OF DOUBLE BUFFER STUFF
         //Erase objects from previous iteration
-        eraseOldObject(player);
 
-        //set "old" values to current values
-        player.hitbox.old_x = player.hitbox.x;
+        eraseOldObject(player);
+        player.hitbox.old_x = player.hitbox.x; //set "old" values to current values
         player.hitbox.old_y = player.hitbox.y;
 
-        eraseOldBullet(playerBullet);
-        playerBullet.hitbox.old_x = playerBullet.hitbox.x;
-        playerBullet.hitbox.old_y = playerBullet.hitbox.y;
+        eraseOldBullet(playerBullet[0]);
+        playerBullet[0].hitbox.old_x = playerBullet[0].hitbox.x;
+        playerBullet[0].hitbox.old_y = playerBullet[0].hitbox.y;
+
+        eraseOldBullet(playerBullet[1]);
+        playerBullet[1].hitbox.old_x = playerBullet[1].hitbox.x;
+        playerBullet[1].hitbox.old_y = playerBullet[1].hitbox.y;
         
-        //THIS SECTION CHECKS USER INPUT
+        // for (int i = 0; i < 4; i++) { // delete boss
+        //     eraseOldObject(bossLine[i]);
+        //     bossLine[i].hitbox.old_x = bossLine[i].hitbox.x;
+        //     bossLine[i].hitbox.old_y = bossLine[i].hitbox.y;
+        // }
+
+        // for (int i = 0; i < 8; i++) { // delete goei
+        //     eraseOldObject(goeiLine1[i]);
+        //     goeiLine1[i].hitbox.old_x = goeiLine1[i].hitbox.x;
+        //     goeiLine1[i].hitbox.old_y = goeiLine1[i].hitbox.y;
+        //     eraseOldObject(goeiLine2[i]);
+        //     goeiLine2[i].hitbox.old_x = goeiLine2[i].hitbox.x;
+        //     goeiLine2[i].hitbox.old_y = goeiLine2[i].hitbox.y;
+        // }
+
+        // for (int i = 0; i < 10; i++) { // delete zako
+        //     eraseOldObject(zakoLine1[i]);
+        //     zakoLine1[i].hitbox.old_x = zakoLine1[i].hitbox.x;
+        //     zakoLine1[i].hitbox.old_y = zakoLine1[i].hitbox.y;
+        //     eraseOldObject(zakoLine2[i]);
+        //     zakoLine2[i].hitbox.old_x = zakoLine2[i].hitbox.x;
+        //     zakoLine2[i].hitbox.old_y = zakoLine2[i].hitbox.y;
+        // }
+
+        //DETERMINE PLAYER MOVEMENT
         if ((*keysBaseAddr & 0x0004) == 4) {
             player.hitbox.dx = 3;
         } else if ((*keysBaseAddr & 0x0008) == 8) {
             player.hitbox.dx = -3;
-        } else if ((*keysBaseAddr & 0x0001) == 1) {
-            shoot = TRUE;
         } else {
             player.hitbox.dx = 0;
         }
 
-        //THIS SECTION CALCULATES NEW PLAYER POSITION AND NEW BULLET POSITION
         if (x_outOfBounds(player.hitbox, 0, 319)) {
             player.hitbox.dx = 0;
         }
@@ -253,21 +290,122 @@ int gameLoop() {
             player.hitbox.dy = 0;
         }
 
-        updateObjectPos(&player);//update current positions
-        setBulletPos(&playerBullet, player.hitbox.old_x, player.hitbox.old_y);
-        
-        drawStars();
-        drawObject(player, 1);
+        updateObjectPos(&(player)); // update current positions
 
-        if ((shoot == TRUE) && (numBullets > 0)) {
-            drawBullet(playerBullet);
+        //DETERMINE BULLET MOVEMENT
+        if ((*keysBaseAddr & 0x0001) == 1) {
+            if (numBullets == 2) {
+                playerBullet[0].isMoving = TRUE;
+                numBullets = 1;
+            } else if ((numBullets == 1) && (shotTimer == 0)) {
+                playerBullet[0].isMoving = TRUE;
+                numBullets = 0;
+            }
         }
 
-        drawObject(bossGalaga, (timer/16)%2);
-        drawObject(goeiGalaga, (timer/16)%2);
-        drawObject(zakoGalaga, (timer/16)%2);
+        if (y_outOfBounds(playerBullet[0].hitbox, 0, 239)) {
+            playerBullet[0].isMoving = FALSE;
+            numBullets = numBullets + 1;
+        }
+
+        if (y_outOfBounds(playerBullet[1].hitbox, 0, 239)) {
+            playerBullet[1].isMoving = FALSE;
+            numBullets = numBullets + 1;
+        }
+
+        if (!playerBullet[0].isMoving) {
+            setBulletPos(&playerBullet[0], player.hitbox.x + 6, player.hitbox.y);
+        } else {
+            updateBulletPos(&playerBullet[0]);
+        }
+
+        if (!playerBullet[1].isMoving) {
+            setBulletPos(&playerBullet[1], player.hitbox.x + 6, player.hitbox.y);
+        } else {
+            updateBulletPos(&playerBullet[1]);
+        }
+
+        //stars
+        // int tempOldPos;
+
+        // for (int i = 0; i < 224; i++) {
+        //     // erase old star, draw new star
+        //     tempOldPos = (stars[0][i] - (2*stars[1][i]));
+
+        //     if ((tempOldPos >= 0) && (tempOldPos < 240)) {
+        //         plot_pixel(i,tempOldPos, 0);
+        //     }
+
+        //     if (stars[0][i] > 260) { // reset position after star passes screen
+        //         stars[0][i] = -740;
+        //     }
+
+        //     plot_pixel(i,stars[0][i],0xFFFF);
+
+        //     stars[0][i] += stars[1][i]; // increment position by dy
+        // }
+
+
+        drawObject(player, 1);
+        drawBullet(playerBullet[0]);
+        drawBullet(playerBullet[1]);
+
+        // for (int i = 0; i < 4; i++) {
+            
+        //     if (bossLine[i].hitbox.y < 16) {
+        //         bossLine[i].hitbox.dy = 1;
+        //     } else {
+        //         bossLine[i].hitbox.dy = 0;
+        //     }
+
+        //     updateObjectPos(&bossLine[i]);
+
+        //     drawObject(bossLine[i], 1); // (timer/8)%2
+        // }
+
+        // for (int i = 0; i < 8; i++) {
+        //     if (goeiLine1[i].hitbox.y < 32) {
+        //         goeiLine1[i].hitbox.dy = 1;
+        //     } else {
+        //         goeiLine1[i].hitbox.dy = 0;
+        //     }
+
+        //     if (goeiLine2[i].hitbox.y < 48) {
+        //         goeiLine2[i].hitbox.dy = 1;
+        //     } else {
+        //         goeiLine2[i].hitbox.dy = 0;
+        //     }
+
+        //     updateObjectPos(&goeiLine1[i]);
+        //     updateObjectPos(&goeiLine2[i]);
+
+        //     drawObject(goeiLine1[i], 1);
+        //     drawObject(goeiLine2[i], 1);
+        // }
+        
+        // for (int i = 0; i < 10; i++) {
+        //     if (zakoLine1[i].hitbox.y < 64) {
+        //         zakoLine1[i].hitbox.dy = 1;
+        //     } else {
+        //         zakoLine1[i].hitbox.dy = 0;
+        //     }
+            
+        //     if (zakoLine2[i].hitbox.y < 80) {
+        //         zakoLine2[i].hitbox.dy = 1;
+        //     } else {
+        //         zakoLine2[i].hitbox.dy = 0;
+        //     }
+
+        //     updateObjectPos(&zakoLine1[i]);
+        //     updateObjectPos(&zakoLine2[i]);
+
+        //     drawObject(zakoLine1[i], 1);
+        //     drawObject(zakoLine2[i], 1);
+
+        // }
         
         timer = timer + 1;
+
 
         //buffer stuff
         *frontBuffAddr = 1;//swap buffers
@@ -277,8 +415,35 @@ int gameLoop() {
 
 }
 
-void drawStars() {
+void initializeBossLine(gameObject* bossLine) {
+    for (int i = 0; i < 4; i++) {
+        bossLine[i] = createObject(16,16);
+        initializeBossGalaga(&bossLine[i]);
+        setObjectPos(&bossLine[i], 80 + (16*i), -96);
+    }
+}
 
+void initializeGoeiLine(gameObject* goeiLine, int lineNumber) {
+    for (int i = 0; i < 8; i++) {
+        goeiLine[i] = createObject(16, 16);
+        initializeGoeiGalaga(&goeiLine[i]);
+        setObjectPos(&goeiLine[i], 48 + (16*i), -88 + (16*lineNumber));
+    }
+}
+
+void initializeZakoLine(gameObject* zakoLine, int lineNumber) {
+    for (int i = 0; i < 10; i++) {
+        zakoLine[i] = createObject(16,16);
+        initializeZakoGalaga(&zakoLine[i]);
+        setObjectPos(&zakoLine[i], 32 + (16*i), -48 + (16*lineNumber));
+    }
+}
+
+void initializeStars(int stars[2][224]) {
+    for (int i = 0; i < 224; i++) {
+        stars[0][i] = (rand()%1001) - 760; // initial y-pos
+        stars[1][i] = (rand()%3) + 1; // initial dy
+    }
 }
 
 //gameObject functions
@@ -294,7 +459,7 @@ gameObject createObject(int length_, int height_)
 
 void setObjectPos(gameObject* object, int x_, int y_)
 {
-    setRectPos(&(object->hitbox), x_, y_);
+    setRectPos(&object->hitbox, x_, y_);
 }
 
 void updateObjectPos(gameObject* object) {
@@ -315,14 +480,6 @@ void drawObject(gameObject object, int spriteNum)
     }
 }
 
-void eraseObject(gameObject object) {
-    for (int i = 0; i < object.height; i++) {
-        for (int j = 0; j < object.length; j++) {
-            plot_pixel(object.hitbox.x + i, object.hitbox.y + j, 0);
-        }
-    }
-}
-
 void eraseOldObject(gameObject object) {
     for (int i = 0; i < object.height; i++) {
         for (int j = 0; j < object.length; j++) {
@@ -337,11 +494,12 @@ bullet createBullet(int length_, int height_) {
     object.length = length_;
     object.height = height_;
     object.hitbox = createRect(0, 0, length_, height_, 0);
+    object.isMoving = FALSE;
     return object;
 }
 
 void setBulletPos(bullet* object, int x_, int y_) {
-    setRectPos(&(object->hitbox), x_, y_);
+    setRectPos(&object->hitbox, x_, y_);
 }
 
 void updateBulletPos(bullet* object) {
@@ -356,14 +514,6 @@ void drawBullet(bullet object) {
                     plot_pixel(pixelSize*(object.hitbox.x + col) + i, pixelSize*(object.hitbox.y + row) + j, object.sprite[row][col]);
                 }
             }
-        }
-    }
-}
-
-void eraseBullet(bullet object) {
-    for (int i = 0; i < object.height; i++) {
-        for (int j = 0; j < object.length; j++) {
-            plot_pixel(object.hitbox.x + i, object.hitbox.y + j, 0);
         }
     }
 }
@@ -670,7 +820,8 @@ void initializeBossGalaga(gameObject* object)
     short int array5[16][16] = {{0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000},
                                 {0x0000,0x0000,0x0000,0x0000,0x04d3,0x0000,0x0000,0x0000,0x0000,0x04d3,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000},
                                 {0x0000,0x0000,0x0000,0x0000,0x04d3,0x0000,0x0000,0x0000,0x04d3,0x04d3,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000},
-                                {0x0000,0x0000,0x04d3,0xe240,0xe240,0x04d3,0x0000,0x04d3,0x04d3,0x04d3,0x04d3,0x04d3,0x04d3,0x04d3,0x0000,0x0000},                                    {0x0000,0x04d3,0x04d3,0x04d3,0x04d3,0x04d3,0xffe0,0x04d3,0x04d3,0x04d3,0xe240,0xe240,0xe240,0x04d3,0x04d3,0x0000},
+                                {0x0000,0x0000,0x04d3,0xe240,0xe240,0x04d3,0x0000,0x04d3,0x04d3,0x04d3,0x04d3,0x04d3,0x04d3,0x04d3,0x0000,0x0000},
+                                {0x0000,0x04d3,0x04d3,0x04d3,0x04d3,0x04d3,0xffe0,0x04d3,0x04d3,0x04d3,0xe240,0xe240,0xe240,0x04d3,0x04d3,0x0000},
                                 {0x0000,0x0000,0xe240,0xe240,0x04d3,0xffe0,0xffe0,0xffe0,0xffe0,0x04d3,0x04d3,0x04d3,0xe240,0x04d3,0x04d3,0x04d3},
                                 {0x0000,0x0000,0xe240,0x04d3,0xffe0,0xffe0,0xffe0,0xffe0,0xe240,0x0000,0x0000,0x0000,0x04d3,0x04d3,0x04d3,0x0000},
                                 {0x0000,0x04d3,0x04d3,0x0000,0xffe0,0xffe0,0xffe0,0xffe0,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000},
@@ -1226,7 +1377,9 @@ void clear_screen()
 
 void plot_pixel(int x, int y, short int line_color)
 {
-    *(short int *)(pixel_buffer_start + (y << 10) + (x << 1)) = line_color;
+    if (!(x < 0) && !(x > 319) && !(y < 0) && !(y > 239)) {
+        *(short int *)(pixel_buffer_start + (y << 10) + (x << 1)) = line_color;
+    }
 }
 
 void draw_line(int x0, int y0, int x1, int y1, short int colour) 
