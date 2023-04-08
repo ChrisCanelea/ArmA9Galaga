@@ -372,7 +372,7 @@ int gameLoop() {
 
             updateObjectPos(&bossLine[i]);
 
-            drawObject(bossLine[i], 1); // (timer/8)%2
+            drawObject(bossLine[i], (timer/8)%2); // (timer/8)%2
         }
 
         for (int i = 0; i < 8; i++) {
@@ -391,8 +391,8 @@ int gameLoop() {
             updateObjectPos(&goeiLine1[i]);
             updateObjectPos(&goeiLine2[i]);
 
-            drawObject(goeiLine1[i], 1);
-            drawObject(goeiLine2[i], 1);
+            drawObject(goeiLine1[i], (timer/8)%2);
+            drawObject(goeiLine2[i], (timer/8)%2);
         }
         
         for (int i = 0; i < 10; i++) {
@@ -411,8 +411,8 @@ int gameLoop() {
             updateObjectPos(&zakoLine1[i]);
             updateObjectPos(&zakoLine2[i]);
 
-            drawObject(zakoLine1[i], 1);
-            drawObject(zakoLine2[i], 1);
+            drawObject(zakoLine1[i], (timer/8)%2);
+            drawObject(zakoLine2[i], (timer/8)%2);
 
         }
         
