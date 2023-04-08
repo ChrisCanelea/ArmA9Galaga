@@ -226,12 +226,7 @@ int gameLoop() {
         
         for (int i = 0; i < 4; i++) { // delete boss
             if (bossLine[i].hitbox.y > 0) {
-                // eraseOldObject(bossLine[i]);
-                for (int j = 0; j < 16; j++) {
-                    for (int k = 0; k < 16; k++) {
-                        plot_pixel(bossLine[i].hitbox.old_x + j, bossLine[i].hitbox.old_y + k, 0);
-                    }
-                }
+                eraseOldObject(bossLine[i]);
             }
             bossLine[i].hitbox.old_x = bossLine[i].hitbox.x;
             bossLine[i].hitbox.old_y = bossLine[i].hitbox.y;
@@ -322,11 +317,9 @@ int gameLoop() {
                 bossLine[i].hitbox.dy = 0;
             }
 
-            if (bossLine[i].hitbox.y > 0) {
-                drawObject(bossLine[i], 1); // (timer/8)%2
-            }
-
             updatePos(&bossLine[i].hitbox);
+
+            drawObject(bossLine[i], 1); // (timer/8)%2
         }
 
         for (int i = 0; i < 8; i++) {
@@ -342,15 +335,11 @@ int gameLoop() {
                 goeiLine2[i].hitbox.dy = 0;
             }
 
-            if (goeiLine1[i].hitbox.y > 0) {
-                drawObject(goeiLine1[i], 1);
-            }
-            if (goeiLine2[i].hitbox.y > 0) {
-                drawObject(goeiLine2[i], 1);
-            }
-
             updatePos(&goeiLine1[i].hitbox);
             updatePos(&goeiLine2[i].hitbox);
+
+            drawObject(goeiLine1[i], 1);
+            drawObject(goeiLine2[i], 1);
         }
         
         for (int i = 0; i < 10; i++) {
@@ -366,15 +355,12 @@ int gameLoop() {
                 zakoLine2[i].hitbox.dy = 0;
             }
 
-            if (zakoLine1[i].hitbox.y > 0) {
-                drawObject(zakoLine1[i], 1);
-            }
-            if (zakoLine2[i].hitbox.y > 0) {
-                drawObject(zakoLine2[i], 1);
-            }
-
             updatePos(&zakoLine1[i].hitbox);
             updatePos(&zakoLine2[i].hitbox);
+
+            drawObject(zakoLine1[i], 1);
+            drawObject(zakoLine2[i], 1);
+
         }
         
         timer = timer + 1;
@@ -392,7 +378,7 @@ void initializeBossLine(gameObject* bossLine) {
     for (int i = 0; i < 4; i++) {
         bossLine[i] = createObject(16,16);
         initializeBossGalaga(&bossLine[i]);
-        setObjectPos(&bossLine[i], 80 + (16*i), -80);
+        setObjectPos(&bossLine[i], 80 + (16*i), -96);
     }
 }
 
@@ -400,7 +386,7 @@ void initializeGoeiLine(gameObject* goeiLine, int lineNumber) {
     for (int i = 0; i < 8; i++) {
         goeiLine[i] = createObject(16, 16);
         initializeGoeiGalaga(&goeiLine[i]);
-        setObjectPos(&goeiLine[i], 48 + (16*i), -72 + (16*lineNumber));
+        setObjectPos(&goeiLine[i], 48 + (16*i), -88 + (16*lineNumber));
     }
 }
 
@@ -408,7 +394,7 @@ void initializeZakoLine(gameObject* zakoLine, int lineNumber) {
     for (int i = 0; i < 10; i++) {
         zakoLine[i] = createObject(16,16);
         initializeZakoGalaga(&zakoLine[i]);
-        setObjectPos(&zakoLine[i], 32 + (16*i), -32 + (16*lineNumber));
+        setObjectPos(&zakoLine[i], 32 + (16*i), -48 + (16*lineNumber));
     }
 }
 
@@ -1341,7 +1327,9 @@ void clear_screen()
 
 void plot_pixel(int x, int y, short int line_color)
 {
-    *(short int *)(pixel_buffer_start + (y << 10) + (x << 1)) = line_color;
+    if (!(x < 0) && !(x > 319) && !(y < 0) && !(y > 239)) {
+        *(short int *)(pixel_buffer_start + (y << 10) + (x << 1)) = line_color;
+    }
 }
 
 void draw_line(int x0, int y0, int x1, int y1, short int colour) 
