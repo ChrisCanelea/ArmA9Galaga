@@ -89,13 +89,17 @@ void drawStars();
 //gameObject functions
 gameObject createObject(int length_, int height_);
 void setObjectPos(gameObject* object, int x_, int y_);
+void updateObjectPos(gameObject* object);
 void drawObject(gameObject object, int spriteNum);
+void eraseObject(gameObject object);
 void eraseOldObject(gameObject object);
 
 //bullet functions
 bullet createBullet(int length_, int height_);
 void setBulletPos(bullet* object, int x_, int y_);
+void updateBulletPos(bullet* object);
 void drawBullet(bullet object);
+void eraseBullet(bullet object);
 void eraseOldBullet(bullet object);
 
 
@@ -190,15 +194,18 @@ void titleScreen() {
 
 int gameLoop() {
     bool gameOver = FALSE;
+    bool shoot = FALSE;
+    int numBullets = 1;
 
     //initialize game objects
     gameObject player = createObject(16, 16);
     initializePlayer(&player);
     setObjectPos(&player, 0, 220);
 
-    bullet playerBullet = createBullet(3, 8);
+    bullet playerBullet;
+    playerBullet = createBullet(3, 8);
     initializePlayerBullet(&playerBullet);
-    setBulletPos(&playerBullet, 100, 100);
+    playerBullet.hitbox.dy = -3;
 
     gameObject bossGalaga = createObject(16, 16);
     initializeBossGalaga(&bossGalaga);
@@ -214,52 +221,30 @@ int gameLoop() {
     
     while (!gameOver)
     {   
-
+        //THIS SECTION TAKES CARE OF DOUBLE BUFFER STUFF
         //Erase objects from previous iteration
         eraseOldObject(player);
-
-        // eraseOldRect(square);
-
-        // if ((square.old_y + square.height) > ground.top) {
-        //     drawRect(ground);
-        // }
 
         //set "old" values to current values
         player.hitbox.old_x = player.hitbox.x;
         player.hitbox.old_y = player.hitbox.y;
 
-        // if (contact(square, ground)) {
-        //     square.dy = 0;
-        //     setBottom(&square, ground.top);
-        //     if ((*keysBaseAddr & 0x0004) == 4) {
-        //         square.dy = -10;
-        //     }
-        // } /*else if (contact(square, platform)) {
-        //     drawRect(test);
-        // }*/ else {
-        //     square.dy += 1;
-        // }
-
-        // if ((square.bottom >= platform.top)/* && (square.right >= platform.left) && (square.left <= platform.right)*/) {
-        //     square.dy = 0;
-        // }
-
-        /*if (contact(square, platform)){
-            square.dy = 0;
-            setBottom(&square, platform.top);
-            if ((*keysBaseAddr & 0x0004) == 4) {
-                square.dy = -10;
-            }
-        }*/
-
-        if ((*keysBaseAddr & 0x0001) == 1) {
+        eraseOldBullet(playerBullet);
+        playerBullet.hitbox.old_x = playerBullet.hitbox.x;
+        playerBullet.hitbox.old_y = playerBullet.hitbox.y;
+        
+        //THIS SECTION CHECKS USER INPUT
+        if ((*keysBaseAddr & 0x0004) == 4) {
             player.hitbox.dx = 3;
-        } else if ((*keysBaseAddr & 0x0002) == 2) {
+        } else if ((*keysBaseAddr & 0x0008) == 8) {
             player.hitbox.dx = -3;
+        } else if ((*keysBaseAddr & 0x0001) == 1) {
+            shoot = TRUE;
         } else {
             player.hitbox.dx = 0;
         }
 
+        //THIS SECTION CALCULATES NEW PLAYER POSITION AND NEW BULLET POSITION
         if (x_outOfBounds(player.hitbox, 0, 319)) {
             player.hitbox.dx = 0;
         }
@@ -268,16 +253,19 @@ int gameLoop() {
             player.hitbox.dy = 0;
         }
 
-        updatePos(&(player.hitbox));//update current positions
-        // drawRect(square);
-        //drawRect(ground);
-
+        updateObjectPos(&player);//update current positions
+        setBulletPos(&playerBullet, player.hitbox.old_x, player.hitbox.old_y);
+        
         drawStars();
         drawObject(player, 1);
-        drawBullet(playerBullet);
-        drawObject(bossGalaga, (timer/8)%2);
-        drawObject(goeiGalaga, (timer/8)%2);
-        drawObject(zakoGalaga, (timer/8)%2);
+
+        if ((shoot == TRUE) && (numBullets > 0)) {
+            drawBullet(playerBullet);
+        }
+
+        drawObject(bossGalaga, (timer/16)%2);
+        drawObject(goeiGalaga, (timer/16)%2);
+        drawObject(zakoGalaga, (timer/16)%2);
         
         timer = timer + 1;
 
@@ -306,7 +294,11 @@ gameObject createObject(int length_, int height_)
 
 void setObjectPos(gameObject* object, int x_, int y_)
 {
-    setRectPos(&object->hitbox, x_, y_);
+    setRectPos(&(object->hitbox), x_, y_);
+}
+
+void updateObjectPos(gameObject* object) {
+    updatePos(&((*object).hitbox));
 }
 
 void drawObject(gameObject object, int spriteNum)
@@ -319,6 +311,14 @@ void drawObject(gameObject object, int spriteNum)
                     plot_pixel(pixelSize*(object.hitbox.x + col) + i, pixelSize*(object.hitbox.y + row) + j, object.sprite[spriteNum][row][col]);
                 }
             }
+        }
+    }
+}
+
+void eraseObject(gameObject object) {
+    for (int i = 0; i < object.height; i++) {
+        for (int j = 0; j < object.length; j++) {
+            plot_pixel(object.hitbox.x + i, object.hitbox.y + j, 0);
         }
     }
 }
@@ -341,7 +341,11 @@ bullet createBullet(int length_, int height_) {
 }
 
 void setBulletPos(bullet* object, int x_, int y_) {
-    setRectPos(&object->hitbox, x_, y_);
+    setRectPos(&(object->hitbox), x_, y_);
+}
+
+void updateBulletPos(bullet* object) {
+    updatePos(&((*object).hitbox));
 }
 
 void drawBullet(bullet object) {
@@ -352,6 +356,14 @@ void drawBullet(bullet object) {
                     plot_pixel(pixelSize*(object.hitbox.x + col) + i, pixelSize*(object.hitbox.y + row) + j, object.sprite[row][col]);
                 }
             }
+        }
+    }
+}
+
+void eraseBullet(bullet object) {
+    for (int i = 0; i < object.height; i++) {
+        for (int j = 0; j < object.length; j++) {
+            plot_pixel(object.hitbox.x + i, object.hitbox.y + j, 0);
         }
     }
 }
