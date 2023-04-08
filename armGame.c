@@ -200,7 +200,7 @@ void titleScreen() {
 int gameLoop() {
     bool gameOver = FALSE;
     int numBullets = 2;
-    int shotTimer = 2;
+    int shotTimer = 3;
 
     //initialize game objects
     gameObject player = createObject(16, 16);
@@ -214,8 +214,6 @@ int gameLoop() {
     initializePlayerBullet(&playerBullet[1]);
     setBulletPos(&playerBullet[0], player.hitbox.x + 6, player.hitbox.y);
     setBulletPos(&playerBullet[1], player.hitbox.x + 6, player.hitbox.y);
-    playerBullet[0].hitbox.dy = -3;
-    playerBullet[1].hitbox.dy = -3;
 
     gameObject bossLine[4];
     gameObject goeiLine1[8];
@@ -240,38 +238,39 @@ int gameLoop() {
         eraseOldObject(player);
         player.hitbox.old_x = player.hitbox.x; //set "old" values to current values
         player.hitbox.old_y = player.hitbox.y;
-
+        
         eraseOldBullet(playerBullet[0]);
+        eraseOldBullet(playerBullet[1]);
+
         playerBullet[0].hitbox.old_x = playerBullet[0].hitbox.x;
         playerBullet[0].hitbox.old_y = playerBullet[0].hitbox.y;
 
-        eraseOldBullet(playerBullet[1]);
         playerBullet[1].hitbox.old_x = playerBullet[1].hitbox.x;
         playerBullet[1].hitbox.old_y = playerBullet[1].hitbox.y;
         
-        // for (int i = 0; i < 4; i++) { // delete boss
-        //     eraseOldObject(bossLine[i]);
-        //     bossLine[i].hitbox.old_x = bossLine[i].hitbox.x;
-        //     bossLine[i].hitbox.old_y = bossLine[i].hitbox.y;
-        // }
+        for (int i = 0; i < 4; i++) { // delete boss
+            eraseOldObject(bossLine[i]);
+            bossLine[i].hitbox.old_x = bossLine[i].hitbox.x;
+            bossLine[i].hitbox.old_y = bossLine[i].hitbox.y;
+        }
 
-        // for (int i = 0; i < 8; i++) { // delete goei
-        //     eraseOldObject(goeiLine1[i]);
-        //     goeiLine1[i].hitbox.old_x = goeiLine1[i].hitbox.x;
-        //     goeiLine1[i].hitbox.old_y = goeiLine1[i].hitbox.y;
-        //     eraseOldObject(goeiLine2[i]);
-        //     goeiLine2[i].hitbox.old_x = goeiLine2[i].hitbox.x;
-        //     goeiLine2[i].hitbox.old_y = goeiLine2[i].hitbox.y;
-        // }
+        for (int i = 0; i < 8; i++) { // delete goei
+            eraseOldObject(goeiLine1[i]);
+            goeiLine1[i].hitbox.old_x = goeiLine1[i].hitbox.x;
+            goeiLine1[i].hitbox.old_y = goeiLine1[i].hitbox.y;
+            eraseOldObject(goeiLine2[i]);
+            goeiLine2[i].hitbox.old_x = goeiLine2[i].hitbox.x;
+            goeiLine2[i].hitbox.old_y = goeiLine2[i].hitbox.y;
+        }
 
-        // for (int i = 0; i < 10; i++) { // delete zako
-        //     eraseOldObject(zakoLine1[i]);
-        //     zakoLine1[i].hitbox.old_x = zakoLine1[i].hitbox.x;
-        //     zakoLine1[i].hitbox.old_y = zakoLine1[i].hitbox.y;
-        //     eraseOldObject(zakoLine2[i]);
-        //     zakoLine2[i].hitbox.old_x = zakoLine2[i].hitbox.x;
-        //     zakoLine2[i].hitbox.old_y = zakoLine2[i].hitbox.y;
-        // }
+        for (int i = 0; i < 10; i++) { // delete zako
+            eraseOldObject(zakoLine1[i]);
+            zakoLine1[i].hitbox.old_x = zakoLine1[i].hitbox.x;
+            zakoLine1[i].hitbox.old_y = zakoLine1[i].hitbox.y;
+            eraseOldObject(zakoLine2[i]);
+            zakoLine2[i].hitbox.old_x = zakoLine2[i].hitbox.x;
+            zakoLine2[i].hitbox.old_y = zakoLine2[i].hitbox.y;
+        }
 
         //DETERMINE PLAYER MOVEMENT
         if ((*keysBaseAddr & 0x0004) == 4) {
@@ -296,20 +295,28 @@ int gameLoop() {
         if ((*keysBaseAddr & 0x0001) == 1) {
             if (numBullets == 2) {
                 playerBullet[0].isMoving = TRUE;
+                playerBullet[0].hitbox.dy = -7;
                 numBullets = 1;
-            } else if ((numBullets == 1) && (shotTimer == 0)) {
-                playerBullet[0].isMoving = TRUE;
-                numBullets = 0;
+                shotTimer = 3;
+            } else if (numBullets == 1) {
+                if (shotTimer == 0) {
+                    playerBullet[1].isMoving = TRUE;
+                    playerBullet[1].hitbox.dy = -7;
+                    numBullets = 0;
+                }
+                shotTimer = shotTimer - 1;
             }
         }
 
         if (y_outOfBounds(playerBullet[0].hitbox, 0, 239)) {
             playerBullet[0].isMoving = FALSE;
+            playerBullet[0].hitbox.dy = 0;
             numBullets = numBullets + 1;
         }
 
         if (y_outOfBounds(playerBullet[1].hitbox, 0, 239)) {
             playerBullet[1].isMoving = FALSE;
+            playerBullet[1].hitbox.dy = 0;
             numBullets = numBullets + 1;
         }
 
@@ -317,92 +324,92 @@ int gameLoop() {
             setBulletPos(&playerBullet[0], player.hitbox.x + 6, player.hitbox.y);
         } else {
             updateBulletPos(&playerBullet[0]);
+            drawBullet(playerBullet[0]);
         }
 
         if (!playerBullet[1].isMoving) {
             setBulletPos(&playerBullet[1], player.hitbox.x + 6, player.hitbox.y);
         } else {
             updateBulletPos(&playerBullet[1]);
+            drawBullet(playerBullet[1]);
         }
 
         //stars
-        // int tempOldPos;
+        int tempOldPos;
 
-        // for (int i = 0; i < 224; i++) {
-        //     // erase old star, draw new star
-        //     tempOldPos = (stars[0][i] - (2*stars[1][i]));
+        for (int i = 0; i < 224; i++) {
+            // erase old star, draw new star
+            tempOldPos = (stars[0][i] - (2*stars[1][i]));
 
-        //     if ((tempOldPos >= 0) && (tempOldPos < 240)) {
-        //         plot_pixel(i,tempOldPos, 0);
-        //     }
+            if ((tempOldPos >= 0) && (tempOldPos < 240)) {
+                plot_pixel(i,tempOldPos, 0);
+            }
 
-        //     if (stars[0][i] > 260) { // reset position after star passes screen
-        //         stars[0][i] = -740;
-        //     }
+            if (stars[0][i] > 260) { // reset position after star passes screen
+                stars[0][i] = -740;
+            }
 
-        //     plot_pixel(i,stars[0][i],0xFFFF);
+            plot_pixel(i,stars[0][i],0xFFFF);
 
-        //     stars[0][i] += stars[1][i]; // increment position by dy
-        // }
+            stars[0][i] += stars[1][i]; // increment position by dy
+        }
 
 
         drawObject(player, 1);
-        drawBullet(playerBullet[0]);
-        drawBullet(playerBullet[1]);
 
-        // for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 4; i++) {
             
-        //     if (bossLine[i].hitbox.y < 16) {
-        //         bossLine[i].hitbox.dy = 1;
-        //     } else {
-        //         bossLine[i].hitbox.dy = 0;
-        //     }
+            if (bossLine[i].hitbox.y < 16) {
+                bossLine[i].hitbox.dy = 1;
+            } else {
+                bossLine[i].hitbox.dy = 0;
+            }
 
-        //     updateObjectPos(&bossLine[i]);
+            updateObjectPos(&bossLine[i]);
 
-        //     drawObject(bossLine[i], 1); // (timer/8)%2
-        // }
+            drawObject(bossLine[i], 1); // (timer/8)%2
+        }
 
-        // for (int i = 0; i < 8; i++) {
-        //     if (goeiLine1[i].hitbox.y < 32) {
-        //         goeiLine1[i].hitbox.dy = 1;
-        //     } else {
-        //         goeiLine1[i].hitbox.dy = 0;
-        //     }
+        for (int i = 0; i < 8; i++) {
+            if (goeiLine1[i].hitbox.y < 32) {
+                goeiLine1[i].hitbox.dy = 1;
+            } else {
+                goeiLine1[i].hitbox.dy = 0;
+            }
 
-        //     if (goeiLine2[i].hitbox.y < 48) {
-        //         goeiLine2[i].hitbox.dy = 1;
-        //     } else {
-        //         goeiLine2[i].hitbox.dy = 0;
-        //     }
+            if (goeiLine2[i].hitbox.y < 48) {
+                goeiLine2[i].hitbox.dy = 1;
+            } else {
+                goeiLine2[i].hitbox.dy = 0;
+            }
 
-        //     updateObjectPos(&goeiLine1[i]);
-        //     updateObjectPos(&goeiLine2[i]);
+            updateObjectPos(&goeiLine1[i]);
+            updateObjectPos(&goeiLine2[i]);
 
-        //     drawObject(goeiLine1[i], 1);
-        //     drawObject(goeiLine2[i], 1);
-        // }
+            drawObject(goeiLine1[i], 1);
+            drawObject(goeiLine2[i], 1);
+        }
         
-        // for (int i = 0; i < 10; i++) {
-        //     if (zakoLine1[i].hitbox.y < 64) {
-        //         zakoLine1[i].hitbox.dy = 1;
-        //     } else {
-        //         zakoLine1[i].hitbox.dy = 0;
-        //     }
+        for (int i = 0; i < 10; i++) {
+            if (zakoLine1[i].hitbox.y < 64) {
+                zakoLine1[i].hitbox.dy = 1;
+            } else {
+                zakoLine1[i].hitbox.dy = 0;
+            }
             
-        //     if (zakoLine2[i].hitbox.y < 80) {
-        //         zakoLine2[i].hitbox.dy = 1;
-        //     } else {
-        //         zakoLine2[i].hitbox.dy = 0;
-        //     }
+            if (zakoLine2[i].hitbox.y < 80) {
+                zakoLine2[i].hitbox.dy = 1;
+            } else {
+                zakoLine2[i].hitbox.dy = 0;
+            }
 
-        //     updateObjectPos(&zakoLine1[i]);
-        //     updateObjectPos(&zakoLine2[i]);
+            updateObjectPos(&zakoLine1[i]);
+            updateObjectPos(&zakoLine2[i]);
 
-        //     drawObject(zakoLine1[i], 1);
-        //     drawObject(zakoLine2[i], 1);
+            drawObject(zakoLine1[i], 1);
+            drawObject(zakoLine2[i], 1);
 
-        // }
+        }
         
         timer = timer + 1;
 
@@ -481,9 +488,9 @@ void drawObject(gameObject object, int spriteNum)
 }
 
 void eraseOldObject(gameObject object) {
-    for (int i = 0; i < object.height; i++) {
-        for (int j = 0; j < object.length; j++) {
-            plot_pixel(object.hitbox.old_x + i, object.hitbox.old_y + j, 0);
+    for (int row = 0; row < object.height; row++) {
+        for (int col = 0; col < object.length; col++) {
+            plot_pixel(object.hitbox.old_x + col, object.hitbox.old_y + row, 0);
         }
     }
 }
@@ -519,9 +526,9 @@ void drawBullet(bullet object) {
 }
 
 void eraseOldBullet(bullet object) {
-    for (int i = 0; i < object.height; i++) {
-        for (int j = 0; j < object.length; j++) {
-            plot_pixel(object.hitbox.old_x + i, object.hitbox.old_y + j, 0);
+    for (int row = 0; row < object.height; row++) {
+        for (int col = 0; col < object.length; col++) {
+            plot_pixel(object.hitbox.old_x + col, object.hitbox.old_y + row, 0);
         }
     }
 }
