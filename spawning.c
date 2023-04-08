@@ -278,30 +278,24 @@ int gameLoop() {
             player.hitbox.dy = 0;
         }
 
-        updatePos(&(player.hitbox)); // update current positions
-
+        updatePos(&(player.hitbox)); // update current positions        
 
         //stars
         int tempOldPos;
 
         for (int i = 0; i < 224; i++) {
-            if ((stars[0][i] >= 0) && (stars[0][i] < 240)) { // erase old star, draw new star
-                
-                tempOldPos = (stars[0][i] - (2*stars[1][i]));
+            // erase old star, draw new star
+            tempOldPos = (stars[0][i] - (2*stars[1][i]));
 
-                if ((tempOldPos >= 0) && (tempOldPos < 240)) {
-                    plot_pixel(i,tempOldPos, 0);
-                }
-
-                plot_pixel(i,stars[0][i],0xFFFF);
+            if ((tempOldPos >= 0) && (tempOldPos < 240)) {
+                plot_pixel(i,tempOldPos, 0);
             }
-            
-            if (stars[0][i] > 239) { // reset position after star passes screen
-                for (int j = 234; j < 240; j++) {
-                    plot_pixel (i,j,0);
-                }
+
+            if (stars[0][i] > 260) { // reset position after star passes screen
                 stars[0][i] = -740;
             }
+
+            plot_pixel(i,stars[0][i],0xFFFF);
 
             stars[0][i] += stars[1][i]; // increment position by dy
         }
