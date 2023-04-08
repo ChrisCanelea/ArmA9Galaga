@@ -299,12 +299,17 @@ int gameLoop() {
                 numBullets = 1;
                 shotTimer = 3;
             } else if (numBullets == 1) {
-                if (shotTimer == 0) {
-                    playerBullet[1].isMoving = TRUE;
-                    playerBullet[1].hitbox.dy = -7;
-                    numBullets = 0;
+                if (shotTimer <= 0) {
+                    if (playerBullet[1].isMoving) {
+                        playerBullet[0].isMoving = TRUE;
+                        playerBullet[0].hitbox.dy = -7;
+                        numBullets = 0;
+                    } else {
+                        playerBullet[1].isMoving = TRUE;
+                        playerBullet[1].hitbox.dy = -7;
+                        numBullets = 0;
+                    }
                 }
-                shotTimer = shotTimer - 1;
             }
         }
 
@@ -413,6 +418,9 @@ int gameLoop() {
         
         timer = timer + 1;
 
+        if (numBullets == 1) {
+            shotTimer = shotTimer - 1;
+        }
 
         //buffer stuff
         *frontBuffAddr = 1;//swap buffers
