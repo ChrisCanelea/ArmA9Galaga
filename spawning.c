@@ -95,12 +95,14 @@ gameObject createObject(int length_, int height_);
 void setObjectPos(gameObject* object, int x_, int y_);
 void drawObject(gameObject object, int spriteNum);
 void eraseOldObject(gameObject object);
+void updateObjectPos(gameObject* object);
 
 //bullet functions
 bullet createBullet(int length_, int height_);
 void setBulletPos(bullet* object, int x_, int y_);
 void drawBullet(bullet object);
 void eraseOldBullet(bullet object);
+void updateBulletPos(bullet* object);
 
 //assets
 void initializePlayer(gameObject* object);
@@ -222,45 +224,34 @@ int gameLoop() {
     {   
 
         //Erase objects from previous iteration
+
         eraseOldObject(player);
+        player.hitbox.old_x = player.hitbox.x; //set "old" values to current values
+        player.hitbox.old_y = player.hitbox.y;
         
         for (int i = 0; i < 4; i++) { // delete boss
-            if (bossLine[i].hitbox.y > 0) {
-                eraseOldObject(bossLine[i]);
-            }
+            eraseOldObject(bossLine[i]);
             bossLine[i].hitbox.old_x = bossLine[i].hitbox.x;
             bossLine[i].hitbox.old_y = bossLine[i].hitbox.y;
         }
 
         for (int i = 0; i < 8; i++) { // delete goei
-            if (goeiLine1[i].hitbox.y > 0) {
-                eraseOldObject(goeiLine1[i]);
-            }
+            eraseOldObject(goeiLine1[i]);
             goeiLine1[i].hitbox.old_x = goeiLine1[i].hitbox.x;
             goeiLine1[i].hitbox.old_y = goeiLine1[i].hitbox.y;
-            if (goeiLine2[i].hitbox.y > 0) {
-                eraseOldObject(goeiLine2[i]);
-            }
+            eraseOldObject(goeiLine2[i]);
             goeiLine2[i].hitbox.old_x = goeiLine2[i].hitbox.x;
             goeiLine2[i].hitbox.old_y = goeiLine2[i].hitbox.y;
         }
 
         for (int i = 0; i < 10; i++) { // delete zako
-            if (zakoLine1[i].hitbox.y > 0) {
-                eraseOldObject(zakoLine1[i]);
-            }
+            eraseOldObject(zakoLine1[i]);
             zakoLine1[i].hitbox.old_x = zakoLine1[i].hitbox.x;
             zakoLine1[i].hitbox.old_y = zakoLine1[i].hitbox.y;
-            if (zakoLine2[i].hitbox.y > 0) {
-                eraseOldObject(zakoLine2[i]);
-            }
+            eraseOldObject(zakoLine2[i]);
             zakoLine2[i].hitbox.old_x = zakoLine2[i].hitbox.x;
             zakoLine2[i].hitbox.old_y = zakoLine2[i].hitbox.y;
         }
-
-        //set "old" values to current values
-        player.hitbox.old_x = player.hitbox.x;
-        player.hitbox.old_y = player.hitbox.y;
 
         if ((*keysBaseAddr & 0x0001) == 1) {
             player.hitbox.dx = 3;
@@ -311,7 +302,7 @@ int gameLoop() {
                 bossLine[i].hitbox.dy = 0;
             }
 
-            updatePos(&bossLine[i].hitbox);
+            updateObjectPos(&bossLine[i]);
 
             drawObject(bossLine[i], 1); // (timer/8)%2
         }
@@ -329,8 +320,8 @@ int gameLoop() {
                 goeiLine2[i].hitbox.dy = 0;
             }
 
-            updatePos(&goeiLine1[i].hitbox);
-            updatePos(&goeiLine2[i].hitbox);
+            updateObjectPos(&goeiLine1[i]);
+            updateObjectPos(&goeiLine2[i]);
 
             drawObject(goeiLine1[i], 1);
             drawObject(goeiLine2[i], 1);
@@ -349,8 +340,8 @@ int gameLoop() {
                 zakoLine2[i].hitbox.dy = 0;
             }
 
-            updatePos(&zakoLine1[i].hitbox);
-            updatePos(&zakoLine2[i].hitbox);
+            updateObjectPos(&zakoLine1[i]);
+            updateObjectPos(&zakoLine2[i]);
 
             drawObject(zakoLine1[i], 1);
             drawObject(zakoLine2[i], 1);
@@ -415,6 +406,10 @@ void setObjectPos(gameObject* object, int x_, int y_)
     setRectPos(&object->hitbox, x_, y_);
 }
 
+void updateObjectPos(gameObject* object) {
+    updatePos(&((*object).hitbox));
+}
+
 void drawObject(gameObject object, int spriteNum)
 {
     for (int row = 0; row < object.height; row++) {
@@ -448,6 +443,10 @@ bullet createBullet(int length_, int height_) {
 
 void setBulletPos(bullet* object, int x_, int y_) {
     setRectPos(&object->hitbox, x_, y_);
+}
+
+void updateBulletPos(bullet* object) {
+    updatePos(&((*object).hitbox));
 }
 
 void drawBullet(bullet object) {
