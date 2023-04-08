@@ -87,7 +87,7 @@ void swap(int* a, int* b);
 //main loop functions
 void titleScreen();
 int gameLoop();
-void initializeStars(int stars[2][224]);
+void initializeStars(int stars[][224]);
 
 void initializeBossLine(gameObject* bossLine);
 void initializeGoeiLine(gameObject* goeiLine, int lineNumber);
@@ -229,7 +229,7 @@ int gameLoop() {
     initializeZakoLine(zakoLine1, 1);
     initializeZakoLine(zakoLine2, 2);
 
-    initializeStars(&stars);
+    initializeStars(stars);
 
     while (player.lives > 0)
     {   
@@ -382,9 +382,9 @@ int gameLoop() {
             }
 
             if (playerBullet[1].isMoving) {
-                if ((bossLine[i].hitbox.left < playerBullet[1]hitbox.left) && 
-                    (bossLine[i].hitbox.right > playerBullet[1]hitbox.right) && 
-                    (bossLine[i].hitbox.bottom > playerBullet[1]hitbox.top)) {
+                if ((bossLine[i].hitbox.left < playerBullet[1].hitbox.left) && 
+                    (bossLine[i].hitbox.right > playerBullet[1].hitbox.right) && 
+                    (bossLine[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
                     
                     bossLine[i].lives = 0;
                 }
@@ -426,16 +426,16 @@ int gameLoop() {
             }
 
             if (playerBullet[1].isMoving) {
-                if ((goeiLine1[i].hitbox.left < playerBullet[1]hitbox.left) && 
-                    (goeiLine1[i].hitbox.right > playerBullet[1]hitbox.right) && 
-                    (goeiLine1[i].hitbox.bottom > playerBullet[1]hitbox.top)) {
+                if ((goeiLine1[i].hitbox.left < playerBullet[1].hitbox.left) && 
+                    (goeiLine1[i].hitbox.right > playerBullet[1].hitbox.right) && 
+                    (goeiLine1[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
                     
                     goeiLine1[i].lives = 0;
                 }
 
-                if ((goeiLine2[i].hitbox.left < playerBullet[1]hitbox.left) && 
-                    (goeiLine2[i].hitbox.right > playerBullet[1]hitbox.right) && 
-                    (goeiLine2[i].hitbox.bottom > playerBullet[1]hitbox.top)) {
+                if ((goeiLine2[i].hitbox.left < playerBullet[1].hitbox.left) && 
+                    (goeiLine2[i].hitbox.right > playerBullet[1].hitbox.right) && 
+                    (goeiLine2[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
                     
                     goeiLine2[i].lives = 0;
                 }
@@ -445,7 +445,7 @@ int gameLoop() {
                 drawObject(goeiLine1[i], (timer/8)%2);
             }
 
-            if (goeiLine2.lives > 0) {
+            if (goeiLine2[i].lives > 0) {
                 drawObject(goeiLine2[i], (timer/8)%2);
             }
         }
@@ -483,16 +483,16 @@ int gameLoop() {
             }
 
             if (playerBullet[1].isMoving) {
-                if ((zakoLine1[i].hitbox.left < playerBullet[1]hitbox.left) && 
-                    (zakoLine1[i].hitbox.right > playerBullet[1]hitbox.right) && 
-                    (zakoLine1[i].hitbox.bottom > playerBullet[1]hitbox.top)) {
+                if ((zakoLine1[i].hitbox.left < playerBullet[1].hitbox.left) && 
+                    (zakoLine1[i].hitbox.right > playerBullet[1].hitbox.right) && 
+                    (zakoLine1[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
                     
                     zakoLine1[i].lives = 0;
                 }
 
-                if ((zakoLine2[i].hitbox.left < playerBullet[1]hitbox.left) && 
-                    (zakoLine2[i].hitbox.right > playerBullet[1]hitbox.right) && 
-                    (zakoLine2[i].hitbox.bottom > playerBullet[1]hitbox.top)) {
+                if ((zakoLine2[i].hitbox.left < playerBullet[1].hitbox.left) && 
+                    (zakoLine2[i].hitbox.right > playerBullet[1].hitbox.right) && 
+                    (zakoLine2[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
                     
                     zakoLine2[i].lives = 0;
                 }
@@ -502,7 +502,7 @@ int gameLoop() {
                 drawObject(zakoLine1[i], (timer/8)%2);
             }
 
-            if (zakoLine2.lives > 0) {
+            if (zakoLine2[i].lives > 0) {
                 drawObject(zakoLine2[i], (timer/8)%2);
             }
         }
@@ -545,7 +545,7 @@ void initializeZakoLine(gameObject* zakoLine, int lineNumber) {
     }
 }
 
-void initializeStars(int stars[2][224]) {
+void initializeStars(int stars[][224]) {
     for (int i = 0; i < 224; i++) {
         stars[0][i] = (rand()%1001) - 760; // initial y-pos
         stars[1][i] = (rand()%3) + 1; // initial dy
@@ -577,7 +577,7 @@ void drawObject(gameObject object, int spriteNum)
 {
     for (int row = 0; row < object.height; row++) {
         for (int col = 0; col < object.length; col++) {
-            plot_pixel(pixelSize*(object.hitbox.x + col) + i, pixelSize*(object.hitbox.y + row) + j, object.sprite[spriteNum][row][col]);
+            plot_pixel(object.hitbox.x + col, object.hitbox.y + row, object.sprite[spriteNum][row][col]);
         }
     }
 }
@@ -611,7 +611,7 @@ void updateBulletPos(bullet* object) {
 void drawBullet(bullet object) {
     for (int row = 0; row < object.height; row++) {
         for (int col = 0; col < object.length; col++) {
-            plot_pixel(pixelSize*(object.hitbox.x + col) + i, pixelSize*(object.hitbox.y + row) + j, object.sprite[row][col]);
+            plot_pixel(object.hitbox.x + col, object.hitbox.y + row, object.sprite[row][col]);
         }
     }
 }
