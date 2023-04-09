@@ -293,7 +293,7 @@ int gameLoop() {
     intStageNumber += 1;
     
     int numBullets = 2;
-    int shotTimer = 3;
+    int shotTimer = 7;
     int killDelay = 0;
 
     clear_screen();
@@ -363,9 +363,9 @@ int gameLoop() {
 
         //DETERMINE PLAYER MOVEMENT
         if ((*keysBaseAddr & 0x0004) == 4) {//perhaps move this above erasing of enemies so that erasing and drawing of enemies can be done in a single loop
-            player.hitbox.dx = 3;//test that current code works then test above comment
+            player.hitbox.dx = 2;//test that current code works then test above comment
         } else if ((*keysBaseAddr & 0x0008) == 8) {
-            player.hitbox.dx = -3;
+            player.hitbox.dx = -2;
         } else {
             player.hitbox.dx = 0;
         }
@@ -380,18 +380,18 @@ int gameLoop() {
         if ((*keysBaseAddr & 0x0001) == 1) {
             if ((numBullets == 2) && (killDelay == 0)) {
                 playerBullet[0].isMoving = TRUE;
-                playerBullet[0].hitbox.dy = -7;
+                playerBullet[0].hitbox.dy = -5;
                 numBullets = 1;
-                shotTimer = 3;
+                shotTimer = 7;
             } else if ((numBullets == 1) && (killDelay == 0)) {
                 if (shotTimer <= 0) {
                     if (playerBullet[1].isMoving) {
                         playerBullet[0].isMoving = TRUE;
-                        playerBullet[0].hitbox.dy = -7;
+                        playerBullet[0].hitbox.dy = -5;
                         numBullets = 0;
                     } else {
                         playerBullet[1].isMoving = TRUE;
-                        playerBullet[1].hitbox.dy = -7;
+                        playerBullet[1].hitbox.dy = -5;
                         numBullets = 0;
                     }
                 }
@@ -411,19 +411,6 @@ int gameLoop() {
             numBullets = numBullets + 1;
             killDelay = 2;
         }
-
-        // for (int i = 0; i < 10; i++) { // delete old enemy objects
-        //     if (i < 4) {//delete boss
-        //         eraseOldObject(&bossLine[i]); // only erase boss if it is alive, else its always not being displayed
-        //     }
-        //     if (i < 8) {//delete goei
-        //         eraseOldObject(&goeiLine1[i]); // only erase goei if it is alive, else its always not being displayed
-        //         eraseOldObject(&goeiLine2[i]);
-        //     }
-        //     //delete zako
-        //     eraseOldObject(&zakoLine1[i]); // only zako boss if it is alive, else its always not being displayed
-        //     eraseOldObject(&zakoLine2[i]);
-        // }
 
         for (int i = 0; i < 10; i++) {//draw all new enemy objects
             if (i < 4) {//bossLine
