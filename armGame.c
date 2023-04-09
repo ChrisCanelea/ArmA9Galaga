@@ -188,7 +188,7 @@ int main(void)
     *frontBuffAddr = 1;
     wait_for_vsync(status, frontBuffAddr);
     pixel_buffer_start = *backBuffAddr;
-
+    
     while(1) { // GAME LOOP
         titleScreen();
         gameLoop();
@@ -291,7 +291,7 @@ void titleScreen() {
 int gameLoop() {
     bool gameOver = FALSE; //reset flag
     intStageNumber += 1;
-
+    
     int numBullets = 2;
     int shotTimer = 3;
 
@@ -306,7 +306,7 @@ int gameLoop() {
     clearText();
 
     //initialize game objects
-    gameObject player = createObject(16, 16); //player initialization (controllable)
+    gameObject player = createObject(16, 16);
     initializePlayer(&player);
     setObjectPos(&player, 104, 220);
 
@@ -322,13 +322,13 @@ int gameLoop() {
     gameObject goeiLine1[8];
     gameObject goeiLine2[8];
     gameObject zakoLine1[10];
-    gameObject zakoLine2[10]; // enemy instantiation
+    gameObject zakoLine2[10];
 
     initializeBossLine(bossLine);
     initializeGoeiLine(goeiLine1, 1);
     initializeGoeiLine(goeiLine2, 2);
     initializeZakoLine(zakoLine1, 1);
-    initializeZakoLine(zakoLine2, 2); // enemy initialization
+    initializeZakoLine(zakoLine2, 2);
 
     int stars[2][224];
     initializeStars(stars);
@@ -340,7 +340,7 @@ int gameLoop() {
             *(keysBaseAddr + 3) = 0xF;
             gameOver = TRUE;
         }
-        
+
         getNumString(intStageNumber, charStageNumber, 3);
         getNumString(intCurrentScore, charCurrentScore, 8); // converts globals into a character string for writing on vga
         
@@ -354,7 +354,7 @@ int gameLoop() {
 
         writeText(60, 54, credits1);
         writeText(64, 56, credits2);
-        
+
         //Erase objects from previous iteration
         eraseOldObject(player);
         player.hitbox.old_x = player.hitbox.x; //set "old" values to current values
@@ -368,7 +368,7 @@ int gameLoop() {
 
         playerBullet[1].hitbox.old_x = playerBullet[1].hitbox.x;
         playerBullet[1].hitbox.old_y = playerBullet[1].hitbox.y;
-
+        
         for (int i = 0; i < 4; i++) { // delete boss
             eraseOldObject(bossLine[i]);
             bossLine[i].hitbox.old_x = bossLine[i].hitbox.x;
@@ -410,7 +410,7 @@ int gameLoop() {
             player.hitbox.dy = 0;
         }
 
-        updateObjectPos(&player); // update current positions        
+        updateObjectPos(&player); // update current positions
 
         //DETERMINE BULLET MOVEMENT
         if ((*keysBaseAddr & 0x0001) == 1) {
@@ -467,7 +467,7 @@ int gameLoop() {
             // erase old star, draw new star
             tempOldPos = (stars[0][i] - (2*stars[1][i]));
 
-            if ((tempOldPos >= 0) && (tempOldPos < 240)) { // erase only if old star in bounds
+            if ((tempOldPos >= 0) && (tempOldPos < 240)) {
                 plot_pixel(i,tempOldPos, 0);
             }
 
@@ -475,7 +475,7 @@ int gameLoop() {
                 stars[0][i] = -740;
             }
 
-            plot_pixel(i,stars[0][i],0xFFFF);
+            plot_pixel(i,stars[0][i], 0xFFFF);
 
             stars[0][i] += stars[1][i]; // increment position by dy
         }
@@ -705,9 +705,9 @@ void drawObject(gameObject object, int spriteNum)
 }
 
 void eraseOldObject(gameObject object) {
-    for (int i = 0; i < object.height; i++) {
-        for (int j = 0; j < object.length; j++) {
-            plot_pixel(object.hitbox.old_x + i, object.hitbox.old_y + j, 0);
+    for (int row = 0; row < object.height; row++) {
+        for (int col = 0; col < object.length; col++) {
+            plot_pixel(object.hitbox.old_x + col, object.hitbox.old_y + row, 0);
         }
     }
 }
@@ -739,9 +739,9 @@ void drawBullet(bullet object) {
 }
 
 void eraseOldBullet(bullet object) {
-    for (int i = 0; i < object.height; i++) {
-        for (int j = 0; j < object.length; j++) {
-            plot_pixel(object.hitbox.old_x + i, object.hitbox.old_y + j, 0);
+    for (int row = 0; row < object.height; row++) {
+        for (int col = 0; col < object.length; col++) {
+            plot_pixel(object.hitbox.old_x + col, object.hitbox.old_y + row, 0);
         }
     }
 }
