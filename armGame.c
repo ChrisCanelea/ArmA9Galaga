@@ -497,7 +497,7 @@ int gameLoop() {
                     (bossLine[i].hitbox.right > playerBullet[0].hitbox.right) && 
                     (bossLine[i].hitbox.bottom > playerBullet[0].hitbox.top)) {
                     
-                    bossLine[i].lives = 0;
+                    bossLine[i].lives = bossLine[i].lives - 1;
                 }
             }
 
@@ -506,7 +506,7 @@ int gameLoop() {
                     (bossLine[i].hitbox.right > playerBullet[1].hitbox.right) && 
                     (bossLine[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
                     
-                    bossLine[i].lives = 0;
+                    bossLine[i].lives = bossLine[i].lives - 1;
                 }
             }
 
