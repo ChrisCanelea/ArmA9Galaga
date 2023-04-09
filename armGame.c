@@ -294,6 +294,7 @@ int gameLoop() {
     
     int numBullets = 2;
     int shotTimer = 3;
+    int killDelay = 0;
 
     clear_screen();
 
@@ -414,12 +415,12 @@ int gameLoop() {
 
         //DETERMINE BULLET MOVEMENT
         if ((*keysBaseAddr & 0x0001) == 1) {
-            if (numBullets == 2) {
+            if ((numBullets == 2) && (killDelay == 0)) {
                 playerBullet[0].isMoving = TRUE;
                 playerBullet[0].hitbox.dy = -7;
                 numBullets = 1;
                 shotTimer = 3;
-            } else if (numBullets == 1) {
+            } else if ((numBullets == 1) && (killDelay == 0)) {
                 if (shotTimer <= 0) {
                     if (playerBullet[1].isMoving) {
                         playerBullet[0].isMoving = TRUE;
@@ -438,12 +439,14 @@ int gameLoop() {
             playerBullet[0].isMoving = FALSE;
             playerBullet[0].hitbox.dy = 0;
             numBullets = numBullets + 1;
+            killDelay = 2;
         }
 
         if (y_outOfBounds(playerBullet[1].hitbox, 0, 239)) {
             playerBullet[1].isMoving = FALSE;
             playerBullet[1].hitbox.dy = 0;
             numBullets = numBullets + 1;
+            killDelay = 2;
         }
 
         if (!playerBullet[0].isMoving) {
@@ -493,20 +496,28 @@ int gameLoop() {
             updateObjectPos(&bossLine[i]);
 
             if (playerBullet[0].isMoving) {
-                if ((bossLine[i].hitbox.left < playerBullet[0].hitbox.left) && //SHOULD BE PLAYERBULLET[0]
+                if (!(bossLine[i].lives == 0) && (bossLine[i].hitbox.left < playerBullet[0].hitbox.left) &&
                     (bossLine[i].hitbox.right > playerBullet[0].hitbox.right) && 
                     (bossLine[i].hitbox.bottom > playerBullet[0].hitbox.top)) {
                     
                     bossLine[i].lives = bossLine[i].lives - 1;
+                    playerBullet[0].isMoving = FALSE;
+                    playerBullet[0].hitbox.dy = 0;
+                    numBullets = numBullets + 1;
+                    killDelay = 2;
                 }
             }
 
             if (playerBullet[1].isMoving) {
-                if ((bossLine[i].hitbox.left < playerBullet[1].hitbox.left) && 
+                if (!(bossLine[i].lives == 0) && (bossLine[i].hitbox.left < playerBullet[1].hitbox.left) && 
                     (bossLine[i].hitbox.right > playerBullet[1].hitbox.right) && 
                     (bossLine[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
                     
                     bossLine[i].lives = bossLine[i].lives - 1;
+                    playerBullet[1].isMoving = FALSE;
+                    playerBullet[1].hitbox.dy = 0;
+                    numBullets = numBullets + 1;
+                    killDelay = 2;
                 }
             }
 
@@ -532,34 +543,50 @@ int gameLoop() {
             updateObjectPos(&goeiLine2[i]);
 
             if (playerBullet[0].isMoving) {
-                if ((goeiLine1[i].hitbox.left < playerBullet[0].hitbox.left) && //SHOULD BE PLAYERBULLET[0]
+                if (!(goeiLine1[i].lives == 0) && (goeiLine1[i].hitbox.left < playerBullet[0].hitbox.left) &&
                     (goeiLine1[i].hitbox.right > playerBullet[0].hitbox.right) && 
                     (goeiLine1[i].hitbox.bottom > playerBullet[0].hitbox.top)) {
                     
                     goeiLine1[i].lives = 0;
+                    playerBullet[0].isMoving = FALSE;
+                    playerBullet[0].hitbox.dy = 0;
+                    numBullets = numBullets + 1;
+                    killDelay = 2;
                 }
 
-                if ((goeiLine2[i].hitbox.left < playerBullet[0].hitbox.left) && 
+                if (!(goeiLine2[i].lives == 0) && (goeiLine2[i].hitbox.left < playerBullet[0].hitbox.left) && 
                     (goeiLine2[i].hitbox.right > playerBullet[0].hitbox.right) && 
                     (goeiLine2[i].hitbox.bottom > playerBullet[0].hitbox.top)) {
                     
                     goeiLine2[i].lives = 0;
+                    playerBullet[0].isMoving = FALSE;
+                    playerBullet[0].hitbox.dy = 0;
+                    numBullets = numBullets + 1;
+                    killDelay = 2;
                 }
             }
 
             if (playerBullet[1].isMoving) {
-                if ((goeiLine1[i].hitbox.left < playerBullet[1].hitbox.left) && 
+                if (!(goeiLine1[i].lives == 0) && (goeiLine1[i].hitbox.left < playerBullet[1].hitbox.left) && 
                     (goeiLine1[i].hitbox.right > playerBullet[1].hitbox.right) && 
                     (goeiLine1[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
                     
                     goeiLine1[i].lives = 0;
+                    playerBullet[1].isMoving = FALSE;
+                    playerBullet[1].hitbox.dy = 0;
+                    numBullets = numBullets + 1;
+                    killDelay = 2;
                 }
 
-                if ((goeiLine2[i].hitbox.left < playerBullet[1].hitbox.left) && 
+                if (!(goeiLine2[i].lives == 0) && (goeiLine2[i].hitbox.left < playerBullet[1].hitbox.left) && 
                     (goeiLine2[i].hitbox.right > playerBullet[1].hitbox.right) && 
                     (goeiLine2[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
                     
                     goeiLine2[i].lives = 0;
+                    playerBullet[1].isMoving = FALSE;
+                    playerBullet[1].hitbox.dy = 0;
+                    numBullets = numBullets + 1;
+                    killDelay = 2;
                 }
             }
 
@@ -589,34 +616,50 @@ int gameLoop() {
             updateObjectPos(&zakoLine2[i]);
 
             if (playerBullet[0].isMoving) {
-                if ((zakoLine1[i].hitbox.left < playerBullet[0].hitbox.left) && //SHOULD BE PLAYERBULLET[0]
+                if (!(zakoLine1[i].lives == 0) && (zakoLine1[i].hitbox.left < playerBullet[0].hitbox.left) && //SHOULD BE PLAYERBULLET[0]
                     (zakoLine1[i].hitbox.right > playerBullet[0].hitbox.right) && 
                     (zakoLine1[i].hitbox.bottom > playerBullet[0].hitbox.top)) {
                     
                     zakoLine1[i].lives = 0;
+                    playerBullet[0].isMoving = FALSE;
+                    playerBullet[0].hitbox.dy = 0;
+                    numBullets = numBullets + 1;
+                    killDelay = 2;
                 }
 
-                if ((zakoLine2[i].hitbox.left < playerBullet[0].hitbox.left) && 
+                if (!(zakoLine2[i].lives == 0) && (zakoLine2[i].hitbox.left < playerBullet[0].hitbox.left) && 
                     (zakoLine2[i].hitbox.right > playerBullet[0].hitbox.right) && 
                     (zakoLine2[i].hitbox.bottom > playerBullet[0].hitbox.top)) {
                     
                     zakoLine2[i].lives = 0;
+                    playerBullet[0].isMoving = FALSE;
+                    playerBullet[0].hitbox.dy = 0;
+                    numBullets = numBullets + 1;
+                    killDelay = 2;
                 }
             }
 
             if (playerBullet[1].isMoving) {
-                if ((zakoLine1[i].hitbox.left < playerBullet[1].hitbox.left) && 
+                if (!(zakoLine1[i].lives == 0) && (zakoLine1[i].hitbox.left < playerBullet[1].hitbox.left) && 
                     (zakoLine1[i].hitbox.right > playerBullet[1].hitbox.right) && 
                     (zakoLine1[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
                     
                     zakoLine1[i].lives = 0;
+                    playerBullet[1].isMoving = FALSE;
+                    playerBullet[1].hitbox.dy = 0;
+                    numBullets = numBullets + 1;
+                    killDelay = 2;
                 }
 
-                if ((zakoLine2[i].hitbox.left < playerBullet[1].hitbox.left) && 
+                if (!(zakoLine2[i].lives == 0) && (zakoLine2[i].hitbox.left < playerBullet[1].hitbox.left) && 
                     (zakoLine2[i].hitbox.right > playerBullet[1].hitbox.right) && 
                     (zakoLine2[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
                     
                     zakoLine2[i].lives = 0;
+                    playerBullet[1].isMoving = FALSE;
+                    playerBullet[1].hitbox.dy = 0;
+                    numBullets = numBullets + 1;
+                    killDelay = 2;
                 }
             }
 
@@ -630,6 +673,10 @@ int gameLoop() {
         }
         
         timer = timer + 1;
+
+        if (killDelay != 0) {
+            killDelay = killDelay - 1;
+        }
 
         if (numBullets == 1) {
             shotTimer = shotTimer - 1;
