@@ -412,42 +412,6 @@ int gameLoop() {
             killDelay = 2;
         }
 
-        if (!playerBullet[0].isMoving) {
-            setBulletPos(&playerBullet[0], player.hitbox.x + 6, player.hitbox.y);
-        } else {
-            updateBulletPos(&playerBullet[0]);
-            drawBullet(playerBullet[0]);
-        }
-
-        if (!playerBullet[1].isMoving) {
-            setBulletPos(&playerBullet[1], player.hitbox.x + 6, player.hitbox.y);
-        } else {
-            updateBulletPos(&playerBullet[1]);
-            drawBullet(playerBullet[1]);
-        }
-
-        //stars
-        int tempOldPos;
-
-        for (int i = 0; i < 224; i++) {
-            // erase old star, draw new star
-            tempOldPos = (stars[0][i] - (2*stars[1][i]));
-
-            if ((tempOldPos >= 0) && (tempOldPos < 240)) {
-                plot_pixel(i,tempOldPos, 0);
-            }
-
-            if (stars[0][i] > 260) { // reset position after star passes screen
-                stars[0][i] = -740;
-            }
-
-            plot_pixel(i,stars[0][i], 0xFFFF);
-
-            stars[0][i] += stars[1][i]; // increment position by dy
-        }
-
-        drawObject(player, 1);
-
         // for (int i = 0; i < 10; i++) { // delete old enemy objects
         //     if (i < 4) {//delete boss
         //         eraseOldObject(&bossLine[i]); // only erase boss if it is alive, else its always not being displayed
@@ -661,6 +625,42 @@ int gameLoop() {
             }
         }
         
+        if (!playerBullet[0].isMoving) {
+            setBulletPos(&playerBullet[0], player.hitbox.x + 6, player.hitbox.y);
+        } else {
+            updateBulletPos(&playerBullet[0]);
+            drawBullet(playerBullet[0]);
+        }
+
+        if (!playerBullet[1].isMoving) {
+            setBulletPos(&playerBullet[1], player.hitbox.x + 6, player.hitbox.y);
+        } else {
+            updateBulletPos(&playerBullet[1]);
+            drawBullet(playerBullet[1]);
+        }
+
+        //stars
+        int tempOldPos;
+
+        for (int i = 0; i < 224; i++) {
+            // erase old star, draw new star
+            tempOldPos = (stars[0][i] - (2*stars[1][i]));
+
+            if ((tempOldPos >= 0) && (tempOldPos < 240)) {
+                plot_pixel(i,tempOldPos, 0);
+            }
+
+            if (stars[0][i] > 260) { // reset position after star passes screen
+                stars[0][i] = -740;
+            }
+
+            plot_pixel(i,stars[0][i], 0xFFFF);
+
+            stars[0][i] += stars[1][i]; // increment position by dy
+        }
+
+        drawObject(player, 1);
+
         timer = timer + 1;
 
         if (killDelay != 0) {
