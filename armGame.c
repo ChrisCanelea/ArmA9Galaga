@@ -391,9 +391,9 @@ int gameLoop() {
             byte3 = PS2data & 0xFF;
             
             // L and R arrow keys to set movement
-            if ((byte2 == 0x74) && (byte3 != 0xF0)) {
+            if ((byte3 == 0x74)) {
                 player.hitbox.dx = 2;
-            } else if ((byte2 == 0x6B) && (byte3 != 0xF0)) {
+            } else if ((byte3 == 0x6B)) {
                 player.hitbox.dx = -2;
             } else {
                 player.hitbox.dx = 0;
@@ -413,7 +413,7 @@ int gameLoop() {
 
         //DETERMINE BULLET MOVEMENT
         PS2data = *(PS2); // read PS/2 data
-        if ((PS2data & 0x8000) && (byte2 == 0x29) && (byte3 != 0xF0)) {
+        if ((PS2data & 0x8000) && (byte2 == 0x29)) {
             if ((numBullets == 2) && (killDelay == 0)) {
                 playerBullet[0].isMoving = TRUE;
                 playerBullet[0].hitbox.dy = -5;
