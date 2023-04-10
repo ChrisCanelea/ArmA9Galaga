@@ -355,7 +355,6 @@ int gameLoop() {
     int PS2data;
     char byte1 = 0, byte2 = 0, byte3 = 0;
     *(PS2) = 0xFF; // reset keyboard
-    *(PS2) = 0xF7; // set all typematic
 
     while (!gameOver)
     {   
@@ -392,12 +391,12 @@ int gameLoop() {
             byte3 = PS2data & 0xFF;
             
             // L and R arrow keys to set movement
-            if ((byte3 == 0x74)) {
+            if (((byte2 == 0xF0) && (byte3 == 0x74)) || ((byte2 == 0xF0) && (byte3 == 0x6B))){
+                player.hitbox.dx = 0; //no movement on arrow key release
+            } else if ((byte3 == 0x74)) {
                 player.hitbox.dx = 2;
             } else if ((byte3 == 0x6B)) {
                 player.hitbox.dx = -2;
-            } else {
-                player.hitbox.dx = 0;
             }
 
             //no movement once key released
@@ -413,8 +412,8 @@ int gameLoop() {
         updateObjectPos(&player); // update current positions
 
         //DETERMINE BULLET MOVEMENT
-        PS2data = *(PS2); // read PS/2 data
-        if ((PS2data & 0x8000) && (byte3 == 0x29)) {
+        // already reading ps2 data earlier in while loop
+        if ((PS2data & 0x8000) && (byte3 == 0x29) && !(byte2 == 0xF0)) { // on space 
             if ((numBullets == 2) && (killDelay == 0)) {
                 playerBullet[0].isMoving = TRUE;
                 playerBullet[0].hitbox.dy = -5;
@@ -683,7 +682,9 @@ int gameLoop() {
             stars[0][i] += stars[1][i]; // increment position by dy
         }
 
-        drawObject(player, 1);
+        if (player.lives > 0) {
+            drawObject(player, 1);
+        }
 
         timer = timer + 1;
 
@@ -815,6 +816,8 @@ void initializePlayer(gameObject* object)
 {   
     //set the player to have 3 lives
     object->lives = 3;
+    //player is WORTHLESS
+    object->pointValue = 0;
     //player has no 0th sprite, fill with black (complete)
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
