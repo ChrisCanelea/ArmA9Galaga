@@ -755,6 +755,8 @@ int gameLoop() {
                     }
                 }
 
+                eraseOldBullet(&bossBullet[i]);
+
                 if (y_outOfBounds(bossBullet[i].hitbox, 0, 239)) {
                     bossBullet[i].isMoving = FALSE;
                     bossBullet[i].hitbox.dy = 0;
@@ -850,6 +852,9 @@ int gameLoop() {
                     }
                 }
 
+                eraseOldBullet(&goeiBullet1[i]);
+                eraseOldBullet(&goeiBullet2[i]);
+
                 if (y_outOfBounds(goeiBullet1[i].hitbox, 0, 239)) {
                     goeiBullet1[i].isMoving = FALSE;
                     goeiBullet1[i].hitbox.dy = 0;
@@ -885,8 +890,13 @@ int gameLoop() {
             }
 
             //zakoLines
-            eraseOldObject(&zakoLine1[i]); // only if it is alive, else its always not being displayed
-            eraseOldObject(&zakoLine2[i]);
+            if (zakoLine1[i].lives > 0) {
+                eraseOldObject(&zakoLine1[i]); // only if it is alive, else its always not being displayed    
+            }
+            if (zakoLine2[i].lives > 0) {
+                eraseOldObject(&zakoLine2[i]);
+            }
+
             if (zakoLine1[i].hitbox.y < 64) {
                 zakoLine1[i].hitbox.dy = 1;
             } else {
@@ -961,6 +971,9 @@ int gameLoop() {
                 }
             }
 
+            eraseOldBullet(&zakoBullet1[i]);
+            eraseOldBullet(&zakoBullet2[i]);
+
             if (y_outOfBounds(zakoBullet1[i].hitbox, 0, 239)) {
                 zakoBullet1[i].isMoving = FALSE;
                 zakoBullet1[i].hitbox.dy = 0;
@@ -994,26 +1007,17 @@ int gameLoop() {
                 drawObject(zakoLine2[i], (timer/8)%2);
             }
 
-            // Enemy bullet
-            eraseOldBullet(&zakoBullet1[i]);
-            eraseOldBullet(&zakoBullet2[i]);
-            if (!(zakoBullet1[i].isMoving) && (zakoLine1[i].lives > 0)) {
-                setBulletPos(&zakoBullet1[i], zakoLine1[i].hitbox.x + 7, zakoLine1[i].hitbox.y);
-            } else if (zakoBullet1[i].isMoving) {
-                updateBulletPos(&zakoBullet1[i]);
-                drawBullet(zakoBullet1[i]);
-            }
-
-            if (!(zakoBullet2[i].isMoving) && (zakoLine2[i].lives > 0)) {
-                setBulletPos(&zakoBullet2[i], zakoLine2[i].hitbox.x + 7, zakoLine2[i].hitbox.y);
-            } else if (zakoBullet2[i].isMoving) {
-                updateBulletPos(&zakoBullet2[i]);
-                drawBullet(zakoBullet2[i]);
+            // Enemy bullet drawing
+            if (i < 4) {
+                if (!(bossBullet[i].isMoving) && (bossLine[i].lives > 0)) {
+                    setBulletPos(&bossBullet[i], bossLine[i].hitbox.x + 7, bossLine[i].hitbox.y);
+                } else if (bossBullet[i].isMoving) {
+                    updateBulletPos(&bossBullet[i]);
+                    drawBullet(bossBullet[i]);
+                }
             }
 
             if (i < 8) {
-                eraseOldBullet(&goeiBullet1[i]);
-                eraseOldBullet(&goeiBullet2[i]);
                 if (!(goeiBullet1[i].isMoving) && (goeiLine1[i].lives > 0)) {
                     setBulletPos(&goeiBullet1[i], goeiLine1[i].hitbox.x + 7, goeiLine1[i].hitbox.y);
                 } else if (goeiBullet1[i].isMoving) {
@@ -1029,14 +1033,18 @@ int gameLoop() {
                 }
             }
 
-            if (i < 4) {
-                eraseOldBullet(&bossBullet[i]);
-                if (!(bossBullet[i].isMoving) && (bossLine[i].lives > 0)) {
-                    setBulletPos(&bossBullet[i], bossLine[i].hitbox.x + 7, bossLine[i].hitbox.y);
-                } else if (bossBullet[i].isMoving) {
-                    updateBulletPos(&bossBullet[i]);
-                    drawBullet(bossBullet[i]);
-                }
+            if (!(zakoBullet1[i].isMoving) && (zakoLine1[i].lives > 0)) {
+                setBulletPos(&zakoBullet1[i], zakoLine1[i].hitbox.x + 7, zakoLine1[i].hitbox.y);
+            } else if (zakoBullet1[i].isMoving) {
+                updateBulletPos(&zakoBullet1[i]);
+                drawBullet(zakoBullet1[i]);
+            }
+
+            if (!(zakoBullet2[i].isMoving) && (zakoLine2[i].lives > 0)) {
+                setBulletPos(&zakoBullet2[i], zakoLine2[i].hitbox.x + 7, zakoLine2[i].hitbox.y);
+            } else if (zakoBullet2[i].isMoving) {
+                updateBulletPos(&zakoBullet2[i]);
+                drawBullet(zakoBullet2[i]);
             }
         }
         
