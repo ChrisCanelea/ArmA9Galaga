@@ -355,6 +355,7 @@ int gameLoop() {
     int PS2data;
     char byte1 = 0, byte2 = 0, byte3 = 0;
     *(PS2) = 0xFF; // reset keyboard
+    *(PS2) = 0xF7; // set all typematic
 
     while (!gameOver)
     {   
@@ -413,7 +414,7 @@ int gameLoop() {
 
         //DETERMINE BULLET MOVEMENT
         PS2data = *(PS2); // read PS/2 data
-        if ((PS2data & 0x8000) && (byte2 == 0x29)) {
+        if ((PS2data & 0x8000) && (byte3 == 0x29)) {
             if ((numBullets == 2) && (killDelay == 0)) {
                 playerBullet[0].isMoving = TRUE;
                 playerBullet[0].hitbox.dy = -5;
