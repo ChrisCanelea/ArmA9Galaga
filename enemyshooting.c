@@ -450,7 +450,7 @@ void gameOver() {
     if (intShotsHit == 0) {
         ratio = 0;
     } else {
-        ratio = (int)((intShotsHit/intShotsFired) * 100);
+        ratio = (int)((intShotsHit/(float)intShotsFired) * 100);
     }
 
     getNumString(ratio, charHitMissRatio, 4);
