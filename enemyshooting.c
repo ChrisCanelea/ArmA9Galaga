@@ -450,7 +450,7 @@ void gameOver() {
     if (intShotsHit == 0) {
         ratio = 0;
     } else {
-        ratio = (int)(intShotsFired/intShotsHit);
+        ratio = (int)((intShotsFired/intShotsHit) * 100);
     }
 
     getNumString(ratio, charHitMissRatio, 4);
@@ -606,8 +606,7 @@ int gameLoop() {
     {   
         // DEBUG STUFF
         if (*(keysBaseAddr + 3) & 0x8) { // KEY3 ENDS GAME
-            *(keysBaseAddr + 3) = 0xF;
-            gameOver = TRUE;
+            player.lives = 0;
         }
         if (*(keysBaseAddr + 3) & 0x4) { // KEY2 REMOVES A LIFE
             player.lives--;
@@ -1219,7 +1218,7 @@ void eraseOldBullet(bullet* object) {
 void initializePlayer(gameObject* object)
 {   
     //set the player to have 3 lives
-    object->lives = 3;
+    object->lives = intLives;
     //player is WORTHLESS
     object->pointValue = 0;
     //player has no 0th sprite, fill with black (complete)
