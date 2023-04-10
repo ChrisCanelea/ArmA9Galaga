@@ -160,6 +160,9 @@ char charStageNumber[3] = "00\0";
 char highScoreText[11] = "HIGH SCORE\0";
 char currentScoreText[14] = "CURRENT SCORE\0";
 char stageText[6] = "STAGE\0";
+char livesText[6] = "LIVES\0";
+int intLives = 3;
+char charLives[2] = "0\0";
 
 int intShotsFired = 0;
 char charShotsFired[5] = "0000\0";
@@ -229,6 +232,7 @@ void titleScreen() {
     intStageNumber = 0;
     intShotsFired = 0;
     intShotsHit = 0;
+    intLives = 3;
 
     if (intCurrentScore > intHighScore) { // update high score if current score is higher than record
         intHighScore = intCurrentScore;
@@ -258,6 +262,7 @@ void titleScreen() {
     getNumString(intHighScore, charHighScore, 8);
     getNumString(intStageNumber, charStageNumber, 3);
     getNumString(intCurrentScore, charCurrentScore, 8); // converts globals into a character string for writing on vga
+    getNumString(intLives, charLives, 2);
 
     writeText(18, 24, startTitle);
 
@@ -268,6 +273,8 @@ void titleScreen() {
     writeText(69, 22, charCurrentScore);
     writeText(71, 31, stageText);
     writeText(74, 33, charStageNumber);
+    writeText(71, 42, livesText);
+    writeText(75, 44, charLives);
 
     writeText(60, 54, credits1);
     writeText(64, 56, credits2);
@@ -350,6 +357,7 @@ void stageTransition() {
     getNumString(intHighScore, charHighScore, 8);
     getNumString(intStageNumber, charStageNumber, 3);
     getNumString(intCurrentScore, charCurrentScore, 8); // converts globals into a character string for writing on vga
+    getNumString(intLives, charLives, 2);
 
     writeText(24, 24, startTitle);
     writeText(31, 24, charStageNumber);
@@ -361,6 +369,8 @@ void stageTransition() {
     writeText(69, 22, charCurrentScore);
     writeText(71, 31, stageText);
     writeText(74, 33, charStageNumber);
+    writeText(71, 42, livesText);
+    writeText(75, 44, charLives);
 
     writeText(60, 54, credits1);
     writeText(64, 56, credits2);
@@ -434,6 +444,7 @@ void gameOver() {
     getNumString(intCurrentScore, charCurrentScore, 8); // converts globals into a character string for writing on vga
     getNumString(intShotsFired, charShotsFired, 5);
     getNumString(intShotsHit, charShotsHit, 5);
+    getNumString(intLives, charLives, 2);
 
     int ratio;
     if (intShotsHit == 0) {
@@ -460,6 +471,8 @@ void gameOver() {
     writeText(69, 22, charCurrentScore);
     writeText(71, 31, stageText);
     writeText(74, 33, charStageNumber);
+    writeText(71, 42, livesText);
+    writeText(75, 44, charLives);
 
     writeText(60, 54, credits1);
     writeText(64, 56, credits2);
@@ -592,14 +605,24 @@ int gameLoop() {
     while (!gameOver)
     {   
         // DEBUG STUFF
-        if (*(keysBaseAddr + 3) & 0x2) { // KEY1 ENDS GAME
+        if (*(keysBaseAddr + 3) & 0x8) { // KEY3 ENDS GAME
             *(keysBaseAddr + 3) = 0xF;
             gameOver = TRUE;
         }
+        if (*(keysBaseAddr + 3) & 0x4) { // KEY2 REMOVES A LIFE
+            player.lives--;
+        }
+        if (*(keysBaseAddr + 3) & 0x2) { // KEY1 MAKES ENEMIES REMAINING 0
+            remainingEnemies = 0;
+        }
+        *(keysBaseAddr + 3) = 0xF;
+
+        intLives = player.lives;
 
         getNumString(intStageNumber, charStageNumber, 3);
         getNumString(intCurrentScore, charCurrentScore, 8); // converts globals into a character string for writing on vga
-        
+        getNumString(intLives, charLives, 2);
+
         writeText(60, 3, gameTitle);
         writeText(66, 9, highScoreText);
         writeText(69, 11, charHighScore);
@@ -607,6 +630,8 @@ int gameLoop() {
         writeText(69, 22, charCurrentScore);
         writeText(71, 31, stageText);
         writeText(74, 33, charStageNumber);
+        writeText(71, 42, livesText);
+        writeText(75, 44, charLives);
 
         writeText(60, 54, credits1);
         writeText(64, 56, credits2);
@@ -740,7 +765,7 @@ int gameLoop() {
                 }
 
                 if (bossLine[i].lives > 0) {
-                    randNum = rand()%1000;
+                    randNum = rand()%(5000 - (((intStageNumber * 200) > 4800) ? 100 : (intStageNumber * 200)));
                     if (!(bossBullet[i].isMoving) && (randNum == 0)) {
                         bossBullet[i].isMoving = TRUE;
                         bossBullet[i].hitbox.dy = 3;
@@ -843,7 +868,7 @@ int gameLoop() {
                 }
 
                 if (goeiLine1[i].lives > 0) {
-                    randNum = rand()%1000;
+                    randNum = rand()%(5000 - (((intStageNumber * 200) > 4800) ? 100 : (intStageNumber * 200)));
                     if (!(goeiBullet1[i].isMoving) && (randNum == 0)) {
                         goeiBullet1[i].isMoving = TRUE;
                         goeiBullet1[i].hitbox.dy = 3;
@@ -854,7 +879,7 @@ int gameLoop() {
                 }
 
                 if (goeiLine2[i].lives > 0) {
-                    randNum = rand()%1000;
+                    randNum = rand()%(5000 - (((intStageNumber * 200) > 4800) ? 100 : (intStageNumber * 200)));
                     if (!(goeiBullet2[i].isMoving) && (randNum == 0)) {
                         goeiBullet2[i].isMoving = TRUE;
                         goeiBullet2[i].hitbox.dy = 3;
@@ -957,7 +982,7 @@ int gameLoop() {
             }
 
             if (zakoLine1[i].lives > 0) {
-                randNum = rand()%1000;
+                randNum = rand()%(5000 - (((intStageNumber * 200) > 4800) ? 100 : (intStageNumber * 200)));
                 if (!(zakoBullet1[i].isMoving) && (randNum == 0)) {
                     zakoBullet1[i].isMoving = TRUE;
                     zakoBullet1[i].hitbox.dy = 3;
@@ -968,7 +993,7 @@ int gameLoop() {
             }
 
             if (zakoLine2[i].lives > 0) {
-                randNum = rand()%1000;
+                randNum = rand()%(5000 - (((intStageNumber * 200) > 4800) ? 100 : (intStageNumber * 200)));
                 if (!(zakoBullet2[i].isMoving) && (randNum == 0)) {
                     zakoBullet2[i].isMoving = TRUE;
                     zakoBullet2[i].hitbox.dy = 3;
@@ -982,7 +1007,7 @@ int gameLoop() {
             if (i < 4) {
                 if (!(bossBullet[i].isMoving) && (bossLine[i].lives > 0)) {
                     setBulletPos(&bossBullet[i], bossLine[i].hitbox.x + 7, bossLine[i].hitbox.y);
-                } else {
+                } else if (bossBullet[i].isMoving) {
                     updateBulletPos(&bossBullet[i]);
                     drawBullet(bossBullet[i]);
                 }
@@ -991,14 +1016,14 @@ int gameLoop() {
             if (i < 8) {
                 if (!(goeiBullet1[i].isMoving) && (goeiLine1[i].lives > 0)) {
                     setBulletPos(&goeiBullet1[i], goeiLine1[i].hitbox.x + 7, goeiLine1[i].hitbox.y);
-                } else {
+                } else if (goeiBullet1[i].isMoving) {
                     updateBulletPos(&goeiBullet1[i]);
                     drawBullet(goeiBullet1[i]);
                 }
 
                 if (!(goeiBullet2[i].isMoving) && (goeiLine2[i].lives > 0)) {
                     setBulletPos(&goeiBullet2[i], goeiLine2[i].hitbox.x + 7, goeiLine2[i].hitbox.y);
-                } else {
+                } else if (goeiBullet2[i].isMoving) {
                     updateBulletPos(&goeiBullet2[i]);
                     drawBullet(goeiBullet2[i]);
                 }
@@ -1006,14 +1031,14 @@ int gameLoop() {
 
             if (!(zakoBullet1[i].isMoving) && (zakoLine1[i].lives > 0)) {
                 setBulletPos(&zakoBullet1[i], zakoLine1[i].hitbox.x + 7, zakoLine1[i].hitbox.y);
-            } else {
+            } else if (zakoBullet1[i].isMoving) {
                 updateBulletPos(&zakoBullet1[i]);
                 drawBullet(zakoBullet1[i]);
             }
 
             if (!(zakoBullet2[i].isMoving) && (zakoLine2[i].lives > 0)) {
                 setBulletPos(&zakoBullet2[i], zakoLine2[i].hitbox.x + 7, zakoLine2[i].hitbox.y);
-            } else {
+            } else if (zakoBullet2[i].isMoving) {
                 updateBulletPos(&zakoBullet2[i]);
                 drawBullet(zakoBullet2[i]);
             }
