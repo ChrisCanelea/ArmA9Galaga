@@ -890,12 +890,8 @@ int gameLoop() {
             }
 
             //zakoLines
-            if (zakoLine1[i].lives > 0) {
-                eraseOldObject(&zakoLine1[i]); // only if it is alive, else its always not being displayed    
-            }
-            if (zakoLine2[i].lives > 0) {
-                eraseOldObject(&zakoLine2[i]);
-            }
+            eraseOldObject(&zakoLine1[i]); // only if it is alive, else its always not being displayed    
+            eraseOldObject(&zakoLine2[i]);
 
             if (zakoLine1[i].hitbox.y < 64) {
                 zakoLine1[i].hitbox.dy = 1;
@@ -1007,6 +1003,10 @@ int gameLoop() {
                 drawObject(zakoLine2[i], (timer/8)%2);
             }
 
+            
+        }
+
+        for (int i = 0; i < 10; i++) {
             // Enemy bullet drawing
             if (i < 4) {
                 if (!(bossBullet[i].isMoving) && (bossLine[i].lives > 0)) {
