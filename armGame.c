@@ -162,7 +162,7 @@ int main(void)
 {
     //volatile int* pixel_ctrl_ptr = (int*)0xFF203020;
     keysBaseAddr = (int*) KEY_BASE;
-    PS2 = (int *)PS2_BASE;
+    PS2 = (int*)PS2_BASE;
     
     // declare other variables(not shown)
     frontBuffAddr = (int*)0xFF203020;//front buffer register address
@@ -267,7 +267,7 @@ void titleScreen() {
             byte2 = byte3;
             byte3 = PS2data & 0xFF;
             
-            if ((byte1 == 'F0') || (byte2 == 'F0') || (byte3 == 'F0')) {
+            if ((byte1 == 0xF0) || (byte2 == 0xF0) || (byte3 == 0xF0)) {
                 gameStart = TRUE;
             }
         }
@@ -391,14 +391,14 @@ int gameLoop() {
             byte3 = PS2data & 0xFF;
             
             // L and R arrow keys to set movement
-            if (byte3 == '74') {
+            if (byte3 == 0x74) {
                 player.hitbox.dx = 2;
-            } else if (byte3 == '6B') {
+            } else if (byte3 == 0x6B) {
                 player.hitbox.dx = -2;
             }
 
             //no movement once key released
-            if ((byte1 == 'F0') || (byte2 == 'F0') || (byte3 == 'F0')) {
+            if ((byte1 == 0xF0) || (byte2 == 0xF0) || (byte3 == 0xF0)) {
                 player.hitbox.dx = 0;
             }
         }
