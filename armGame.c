@@ -258,6 +258,7 @@ void titleScreen() {
 
     int PS2data;
     char byte1 = 0, byte2 = 0, byte3 = 0;
+    *(PS2) = 0xFF; // reset keyboard
 
     while (!gameStart) {
         PS2data = *(PS2); // read PS/2 data
@@ -353,6 +354,7 @@ int gameLoop() {
 
     int PS2data;
     char byte1 = 0, byte2 = 0, byte3 = 0;
+    *(PS2) = 0xFF; // reset keyboard
 
     while (!gameOver)
     {   
