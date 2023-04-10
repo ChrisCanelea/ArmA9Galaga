@@ -13,6 +13,7 @@
 #define TIMER_BASE            0xFF202000
 #define PIXEL_BUF_CTRL_BASE   0xFF203020
 #define CHAR_BUF_CTRL_BASE    0xFF203030
+#define PS2_BASE              0xFF200100
 
 /* VGA colors */
 //#define WHITE 0xFFFF
@@ -98,14 +99,14 @@ void initializeZakoLine(gameObject* zakoLine, int lineNumber);
 gameObject createObject(int length_, int height_);
 void setObjectPos(gameObject* object, int x_, int y_);
 void drawObject(gameObject object, int spriteNum);
-void eraseOldObject(gameObject object);
+void eraseOldObject(gameObject* object);
 void updateObjectPos(gameObject* object);
 
 //bullet functions
 bullet createBullet(int length_, int height_);
 void setBulletPos(bullet* object, int x_, int y_);
 void drawBullet(bullet object);
-void eraseOldBullet(bullet object);
+void eraseOldBullet(bullet* object);
 void updateBulletPos(bullet* object);
 
 //assets
@@ -141,6 +142,7 @@ volatile int* keysBaseAddr;
 volatile int* frontBuffAddr;
 volatile int* backBuffAddr;
 volatile int status;
+volatile int* PS2;
 
 // vga text globals
 int intHighScore = 0;
@@ -160,6 +162,7 @@ int main(void)
 {
     //volatile int* pixel_ctrl_ptr = (int*)0xFF203020;
     keysBaseAddr = (int*) KEY_BASE;
+    PS2 = (int *)PS2_BASE;
     
     // declare other variables(not shown)
     frontBuffAddr = (int*)0xFF203020;//front buffer register address
@@ -230,7 +233,7 @@ void titleScreen() {
     setObjectPos(&player, 104, 220);
 
     int stars[2][224];
-    initializeStars(&stars);
+    initializeStars(stars);
 
     char startTitle[23] = "Press Any Key to Start\0"; // title screen text prompt
 
@@ -253,11 +256,25 @@ void titleScreen() {
 
     *(keysBaseAddr + 3) = 0xF; //clear anything already in edge capture
 
+    int PS2data;
+    char byte1 = 0, byte2 = 0, byte3 = 0;
+
     while (!gameStart) {
-        if (*(keysBaseAddr + 3) & 0xF) { // any key will start the game
-            *(keysBaseAddr + 3) = 0xF;
-            gameStart = TRUE;
+        PS2data = *(PS2); // read PS/2 data
+        if (PS2data & 0x8000) { // check RVALID
+            byte1 = byte2;
+            byte2 = byte3;
+            byte3 = PS2data & 0xFF;
+            
+            if ((byte1 == 'F0') || (byte2 == 'F0') || (byte3 == 'F0')) {
+                gameStart = TRUE;
+            }
         }
+        
+        // if (*(keysBaseAddr + 3) & 0xF) { // any key will start the game
+        //     *(keysBaseAddr + 3) = 0xF;
+        //     gameStart = TRUE;
+        // }
 
         //stars
         int tempOldPos;
@@ -293,7 +310,7 @@ int gameLoop() {
     intStageNumber += 1;
     
     int numBullets = 2;
-    int shotTimer = 3;
+    int shotTimer = 7;
     int killDelay = 0;
 
     clear_screen();
@@ -334,6 +351,9 @@ int gameLoop() {
     int stars[2][224];
     initializeStars(stars);
 
+    int PS2data;
+    char byte1 = 0, byte2 = 0, byte3 = 0;
+
     while (!gameOver)
     {   
         // DEBUG STUFF
@@ -357,58 +377,32 @@ int gameLoop() {
         writeText(64, 56, credits2);
 
         //Erase objects from previous iteration
-        eraseOldObject(player);
-        player.hitbox.old_x = player.hitbox.x; //set "old" values to current values
-        player.hitbox.old_y = player.hitbox.y;
-        
-        eraseOldBullet(playerBullet[0]);
-        eraseOldBullet(playerBullet[1]);
-
-        playerBullet[0].hitbox.old_x = playerBullet[0].hitbox.x;
-        playerBullet[0].hitbox.old_y = playerBullet[0].hitbox.y;
-
-        playerBullet[1].hitbox.old_x = playerBullet[1].hitbox.x;
-        playerBullet[1].hitbox.old_y = playerBullet[1].hitbox.y;
-        
-        for (int i = 0; i < 4; i++) { // delete boss
-            eraseOldObject(bossLine[i]);
-            bossLine[i].hitbox.old_x = bossLine[i].hitbox.x;
-            bossLine[i].hitbox.old_y = bossLine[i].hitbox.y;
-        }
-
-        for (int i = 0; i < 8; i++) { // delete goei
-            eraseOldObject(goeiLine1[i]);
-            goeiLine1[i].hitbox.old_x = goeiLine1[i].hitbox.x;
-            goeiLine1[i].hitbox.old_y = goeiLine1[i].hitbox.y;
-            eraseOldObject(goeiLine2[i]);
-            goeiLine2[i].hitbox.old_x = goeiLine2[i].hitbox.x;
-            goeiLine2[i].hitbox.old_y = goeiLine2[i].hitbox.y;
-        }
-
-        for (int i = 0; i < 10; i++) { // delete zako
-            eraseOldObject(zakoLine1[i]);
-            zakoLine1[i].hitbox.old_x = zakoLine1[i].hitbox.x;
-            zakoLine1[i].hitbox.old_y = zakoLine1[i].hitbox.y;
-            eraseOldObject(zakoLine2[i]);
-            zakoLine2[i].hitbox.old_x = zakoLine2[i].hitbox.x;
-            zakoLine2[i].hitbox.old_y = zakoLine2[i].hitbox.y;
-        }
+        eraseOldObject(&player);
+        eraseOldBullet(&playerBullet[0]); // maybe only do this if playerBullet is moving?
+        eraseOldBullet(&playerBullet[1]);
 
         //DETERMINE PLAYER MOVEMENT
-        if ((*keysBaseAddr & 0x0004) == 4) {
-            player.hitbox.dx = 3;
-        } else if ((*keysBaseAddr & 0x0008) == 8) {
-            player.hitbox.dx = -3;
-        } else {
-            player.hitbox.dx = 0;
+        PS2data = *(PS2); // read PS/2 data
+        if (PS2data & 0x8000) { // check RVALID
+            byte1 = byte2;
+            byte2 = byte3;
+            byte3 = PS2data & 0xFF;
+            
+            // L and R arrow keys to set movement
+            if (byte3 == '74') {
+                player.hitbox.dx = 2;
+            } else if (byte3 == '6B') {
+                player.hitbox.dx = -2;
+            }
+
+            //no movement once key released
+            if ((byte1 == 'F0') || (byte2 == 'F0') || (byte3 == 'F0')) {
+                player.hitbox.dx = 0;
+            }
         }
 
         if (x_outOfBounds(player.hitbox, 0, 224)) { // prevent player motion if going out of bounds
             player.hitbox.dx = 0;
-        }
-        
-        if (y_outOfBounds(player.hitbox, 0, 239)) {
-            player.hitbox.dy = 0;
         }
 
         updateObjectPos(&player); // update current positions
@@ -417,18 +411,18 @@ int gameLoop() {
         if ((*keysBaseAddr & 0x0001) == 1) {
             if ((numBullets == 2) && (killDelay == 0)) {
                 playerBullet[0].isMoving = TRUE;
-                playerBullet[0].hitbox.dy = -7;
+                playerBullet[0].hitbox.dy = -5;
                 numBullets = 1;
-                shotTimer = 3;
+                shotTimer = 7;
             } else if ((numBullets == 1) && (killDelay == 0)) {
                 if (shotTimer <= 0) {
                     if (playerBullet[1].isMoving) {
                         playerBullet[0].isMoving = TRUE;
-                        playerBullet[0].hitbox.dy = -7;
+                        playerBullet[0].hitbox.dy = -5;
                         numBullets = 0;
                     } else {
                         playerBullet[1].isMoving = TRUE;
-                        playerBullet[1].hitbox.dy = -7;
+                        playerBullet[1].hitbox.dy = -5;
                         numBullets = 0;
                     }
                 }
@@ -449,6 +443,206 @@ int gameLoop() {
             killDelay = 2;
         }
 
+        for (int i = 0; i < 10; i++) {//draw all new enemy objects
+            if (i < 4) {//bossLine
+                eraseOldObject(&bossLine[i]); // only erase boss if it is alive, else its always not being displayed
+                if (bossLine[i].hitbox.y < 16) {
+                    bossLine[i].hitbox.dy = 1;
+                } else {
+                    bossLine[i].hitbox.dy = 0;
+                }
+
+                updateObjectPos(&bossLine[i]);
+
+                if (playerBullet[0].isMoving) {
+                    if (!(bossLine[i].lives == 0) && (bossLine[i].hitbox.left < playerBullet[0].hitbox.left) &&
+                        (bossLine[i].hitbox.right > playerBullet[0].hitbox.right) && 
+                        (bossLine[i].hitbox.bottom > playerBullet[0].hitbox.top)) {
+                        
+                        bossLine[i].lives = bossLine[i].lives - 1;
+                        playerBullet[0].isMoving = FALSE;
+                        playerBullet[0].hitbox.dy = 0;
+                        numBullets = numBullets + 1;
+                        killDelay = 2;
+                        intCurrentScore = intCurrentScore + bossLine[i].pointValue;
+                    }
+                }
+
+                if (playerBullet[1].isMoving) {
+                    if (!(bossLine[i].lives == 0) && (bossLine[i].hitbox.left < playerBullet[1].hitbox.left) && 
+                        (bossLine[i].hitbox.right > playerBullet[1].hitbox.right) && 
+                        (bossLine[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
+                        
+                        bossLine[i].lives = bossLine[i].lives - 1;
+                        playerBullet[1].isMoving = FALSE;
+                        playerBullet[1].hitbox.dy = 0;
+                        numBullets = numBullets + 1;
+                        killDelay = 2;
+                        intCurrentScore = intCurrentScore + bossLine[i].pointValue;
+                    }
+                }
+
+                if (bossLine[i].lives > 0) {
+                    drawObject(bossLine[i], (timer/8)%2); // (timer/8)%2
+                }
+            }
+            if (i < 8) {//goeiLines
+                eraseOldObject(&goeiLine1[i]); // only erase goei if it is alive, else its always not being displayed
+                eraseOldObject(&goeiLine2[i]);
+                if (goeiLine1[i].hitbox.y < 32) {
+                    goeiLine1[i].hitbox.dy = 1;
+                } else {
+                    goeiLine1[i].hitbox.dy = 0;
+                }
+
+                if (goeiLine2[i].hitbox.y < 48) {
+                    goeiLine2[i].hitbox.dy = 1;
+                } else {
+                    goeiLine2[i].hitbox.dy = 0;
+                }
+
+                updateObjectPos(&goeiLine1[i]);
+                updateObjectPos(&goeiLine2[i]);
+
+                if (playerBullet[0].isMoving) {
+                    if (!(goeiLine1[i].lives == 0) && (goeiLine1[i].hitbox.left < playerBullet[0].hitbox.left) &&
+                        (goeiLine1[i].hitbox.right > playerBullet[0].hitbox.right) && 
+                        (goeiLine1[i].hitbox.bottom > playerBullet[0].hitbox.top)) {
+                        
+                        goeiLine1[i].lives = 0;
+                        playerBullet[0].isMoving = FALSE;
+                        playerBullet[0].hitbox.dy = 0;
+                        numBullets = numBullets + 1;
+                        killDelay = 2;
+                        intCurrentScore = intCurrentScore + goeiLine1[i].pointValue;
+                    }
+
+                    if (!(goeiLine2[i].lives == 0) && (goeiLine2[i].hitbox.left < playerBullet[0].hitbox.left) && 
+                        (goeiLine2[i].hitbox.right > playerBullet[0].hitbox.right) && 
+                        (goeiLine2[i].hitbox.bottom > playerBullet[0].hitbox.top)) {
+                        
+                        goeiLine2[i].lives = 0;
+                        playerBullet[0].isMoving = FALSE;
+                        playerBullet[0].hitbox.dy = 0;
+                        numBullets = numBullets + 1;
+                        killDelay = 2;
+                        intCurrentScore = intCurrentScore + goeiLine2[i].pointValue;
+                    }
+                }
+
+                if (playerBullet[1].isMoving) {
+                    if (!(goeiLine1[i].lives == 0) && (goeiLine1[i].hitbox.left < playerBullet[1].hitbox.left) && 
+                        (goeiLine1[i].hitbox.right > playerBullet[1].hitbox.right) && 
+                        (goeiLine1[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
+                        
+                        goeiLine1[i].lives = 0;
+                        playerBullet[1].isMoving = FALSE;
+                        playerBullet[1].hitbox.dy = 0;
+                        numBullets = numBullets + 1;
+                        killDelay = 2;
+                        intCurrentScore = intCurrentScore + goeiLine1[i].pointValue;
+                    }
+
+                    if (!(goeiLine2[i].lives == 0) && (goeiLine2[i].hitbox.left < playerBullet[1].hitbox.left) && 
+                        (goeiLine2[i].hitbox.right > playerBullet[1].hitbox.right) && 
+                        (goeiLine2[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
+                        
+                        goeiLine2[i].lives = 0;
+                        playerBullet[1].isMoving = FALSE;
+                        playerBullet[1].hitbox.dy = 0;
+                        numBullets = numBullets + 1;
+                        killDelay = 2;
+                        intCurrentScore = intCurrentScore + goeiLine2[i].pointValue;
+                    }
+                }
+
+                if (goeiLine1[i].lives > 0) {
+                    drawObject(goeiLine1[i], (timer/8)%2);
+                }
+
+                if (goeiLine2[i].lives > 0) {
+                    drawObject(goeiLine2[i], (timer/8)%2);
+                }
+            }
+            //zakoLines
+            eraseOldObject(&zakoLine1[i]); // only zako boss if it is alive, else its always not being displayed
+            eraseOldObject(&zakoLine2[i]);
+            if (zakoLine1[i].hitbox.y < 64) {
+                zakoLine1[i].hitbox.dy = 1;
+            } else {
+                zakoLine1[i].hitbox.dy = 0;
+            }
+            
+            if (zakoLine2[i].hitbox.y < 80) {
+                zakoLine2[i].hitbox.dy = 1;
+            } else {
+                zakoLine2[i].hitbox.dy = 0;
+            }
+
+            updateObjectPos(&zakoLine1[i]);
+            updateObjectPos(&zakoLine2[i]);
+
+            if (playerBullet[0].isMoving) {
+                if (!(zakoLine1[i].lives == 0) && (zakoLine1[i].hitbox.left < playerBullet[0].hitbox.left) && //SHOULD BE PLAYERBULLET[0]
+                    (zakoLine1[i].hitbox.right > playerBullet[0].hitbox.right) && 
+                    (zakoLine1[i].hitbox.bottom > playerBullet[0].hitbox.top)) {
+                    
+                    zakoLine1[i].lives = 0;
+                    playerBullet[0].isMoving = FALSE;
+                    playerBullet[0].hitbox.dy = 0;
+                    numBullets = numBullets + 1;
+                    killDelay = 2;
+                    intCurrentScore = intCurrentScore + zakoLine1[i].pointValue;
+                }
+
+                if (!(zakoLine2[i].lives == 0) && (zakoLine2[i].hitbox.left < playerBullet[0].hitbox.left) && 
+                    (zakoLine2[i].hitbox.right > playerBullet[0].hitbox.right) && 
+                    (zakoLine2[i].hitbox.bottom > playerBullet[0].hitbox.top)) {
+                    
+                    zakoLine2[i].lives = 0;
+                    playerBullet[0].isMoving = FALSE;
+                    playerBullet[0].hitbox.dy = 0;
+                    numBullets = numBullets + 1;
+                    killDelay = 2;
+                    intCurrentScore = intCurrentScore + zakoLine2[i].pointValue;
+                }
+            }
+
+            if (playerBullet[1].isMoving) {
+                if (!(zakoLine1[i].lives == 0) && (zakoLine1[i].hitbox.left < playerBullet[1].hitbox.left) && 
+                    (zakoLine1[i].hitbox.right > playerBullet[1].hitbox.right) && 
+                    (zakoLine1[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
+                    
+                    zakoLine1[i].lives = 0;
+                    playerBullet[1].isMoving = FALSE;
+                    playerBullet[1].hitbox.dy = 0;
+                    numBullets = numBullets + 1;
+                    killDelay = 2;
+                    intCurrentScore = intCurrentScore + zakoLine1[i].pointValue;
+                }
+
+                if (!(zakoLine2[i].lives == 0) && (zakoLine2[i].hitbox.left < playerBullet[1].hitbox.left) && 
+                    (zakoLine2[i].hitbox.right > playerBullet[1].hitbox.right) && 
+                    (zakoLine2[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
+                    
+                    zakoLine2[i].lives = 0;
+                    playerBullet[1].isMoving = FALSE;
+                    playerBullet[1].hitbox.dy = 0;
+                    numBullets = numBullets + 1;
+                    killDelay = 2;
+                    intCurrentScore = intCurrentScore + zakoLine2[i].pointValue;
+                }
+            }
+
+            if (zakoLine1[i].lives > 0) {
+                drawObject(zakoLine1[i], (timer/8)%2);
+            }
+
+            if (zakoLine2[i].lives > 0) {
+                drawObject(zakoLine2[i], (timer/8)%2);
+            }
+        }
+        
         if (!playerBullet[0].isMoving) {
             setBulletPos(&playerBullet[0], player.hitbox.x + 6, player.hitbox.y);
         } else {
@@ -485,193 +679,6 @@ int gameLoop() {
 
         drawObject(player, 1);
 
-        for (int i = 0; i < 4; i++) {//bossLine
-            
-            if (bossLine[i].hitbox.y < 16) {
-                bossLine[i].hitbox.dy = 1;
-            } else {
-                bossLine[i].hitbox.dy = 0;
-            }
-
-            updateObjectPos(&bossLine[i]);
-
-            if (playerBullet[0].isMoving) {
-                if (!(bossLine[i].lives == 0) && (bossLine[i].hitbox.left < playerBullet[0].hitbox.left) &&
-                    (bossLine[i].hitbox.right > playerBullet[0].hitbox.right) && 
-                    (bossLine[i].hitbox.bottom > playerBullet[0].hitbox.top)) {
-                    
-                    bossLine[i].lives = bossLine[i].lives - 1;
-                    playerBullet[0].isMoving = FALSE;
-                    playerBullet[0].hitbox.dy = 0;
-                    numBullets = numBullets + 1;
-                    killDelay = 2;
-                }
-            }
-
-            if (playerBullet[1].isMoving) {
-                if (!(bossLine[i].lives == 0) && (bossLine[i].hitbox.left < playerBullet[1].hitbox.left) && 
-                    (bossLine[i].hitbox.right > playerBullet[1].hitbox.right) && 
-                    (bossLine[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
-                    
-                    bossLine[i].lives = bossLine[i].lives - 1;
-                    playerBullet[1].isMoving = FALSE;
-                    playerBullet[1].hitbox.dy = 0;
-                    numBullets = numBullets + 1;
-                    killDelay = 2;
-                }
-            }
-
-            if (bossLine[i].lives > 0) {
-                drawObject(bossLine[i], (timer/8)%2); // (timer/8)%2
-            }
-        }
-
-        for (int i = 0; i < 8; i++) {//goeiLines
-            if (goeiLine1[i].hitbox.y < 32) {
-                goeiLine1[i].hitbox.dy = 1;
-            } else {
-                goeiLine1[i].hitbox.dy = 0;
-            }
-
-            if (goeiLine2[i].hitbox.y < 48) {
-                goeiLine2[i].hitbox.dy = 1;
-            } else {
-                goeiLine2[i].hitbox.dy = 0;
-            }
-
-            updateObjectPos(&goeiLine1[i]);
-            updateObjectPos(&goeiLine2[i]);
-
-            if (playerBullet[0].isMoving) {
-                if (!(goeiLine1[i].lives == 0) && (goeiLine1[i].hitbox.left < playerBullet[0].hitbox.left) &&
-                    (goeiLine1[i].hitbox.right > playerBullet[0].hitbox.right) && 
-                    (goeiLine1[i].hitbox.bottom > playerBullet[0].hitbox.top)) {
-                    
-                    goeiLine1[i].lives = 0;
-                    playerBullet[0].isMoving = FALSE;
-                    playerBullet[0].hitbox.dy = 0;
-                    numBullets = numBullets + 1;
-                    killDelay = 2;
-                }
-
-                if (!(goeiLine2[i].lives == 0) && (goeiLine2[i].hitbox.left < playerBullet[0].hitbox.left) && 
-                    (goeiLine2[i].hitbox.right > playerBullet[0].hitbox.right) && 
-                    (goeiLine2[i].hitbox.bottom > playerBullet[0].hitbox.top)) {
-                    
-                    goeiLine2[i].lives = 0;
-                    playerBullet[0].isMoving = FALSE;
-                    playerBullet[0].hitbox.dy = 0;
-                    numBullets = numBullets + 1;
-                    killDelay = 2;
-                }
-            }
-
-            if (playerBullet[1].isMoving) {
-                if (!(goeiLine1[i].lives == 0) && (goeiLine1[i].hitbox.left < playerBullet[1].hitbox.left) && 
-                    (goeiLine1[i].hitbox.right > playerBullet[1].hitbox.right) && 
-                    (goeiLine1[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
-                    
-                    goeiLine1[i].lives = 0;
-                    playerBullet[1].isMoving = FALSE;
-                    playerBullet[1].hitbox.dy = 0;
-                    numBullets = numBullets + 1;
-                    killDelay = 2;
-                }
-
-                if (!(goeiLine2[i].lives == 0) && (goeiLine2[i].hitbox.left < playerBullet[1].hitbox.left) && 
-                    (goeiLine2[i].hitbox.right > playerBullet[1].hitbox.right) && 
-                    (goeiLine2[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
-                    
-                    goeiLine2[i].lives = 0;
-                    playerBullet[1].isMoving = FALSE;
-                    playerBullet[1].hitbox.dy = 0;
-                    numBullets = numBullets + 1;
-                    killDelay = 2;
-                }
-            }
-
-            if (goeiLine1[i].lives > 0) {
-                drawObject(goeiLine1[i], (timer/8)%2);
-            }
-
-            if (goeiLine2[i].lives > 0) {
-                drawObject(goeiLine2[i], (timer/8)%2);
-            }
-        }
-        
-        for (int i = 0; i < 10; i++) {//zakoLines
-            if (zakoLine1[i].hitbox.y < 64) {
-                zakoLine1[i].hitbox.dy = 1;
-            } else {
-                zakoLine1[i].hitbox.dy = 0;
-            }
-            
-            if (zakoLine2[i].hitbox.y < 80) {
-                zakoLine2[i].hitbox.dy = 1;
-            } else {
-                zakoLine2[i].hitbox.dy = 0;
-            }
-
-            updateObjectPos(&zakoLine1[i]);
-            updateObjectPos(&zakoLine2[i]);
-
-            if (playerBullet[0].isMoving) {
-                if (!(zakoLine1[i].lives == 0) && (zakoLine1[i].hitbox.left < playerBullet[0].hitbox.left) && //SHOULD BE PLAYERBULLET[0]
-                    (zakoLine1[i].hitbox.right > playerBullet[0].hitbox.right) && 
-                    (zakoLine1[i].hitbox.bottom > playerBullet[0].hitbox.top)) {
-                    
-                    zakoLine1[i].lives = 0;
-                    playerBullet[0].isMoving = FALSE;
-                    playerBullet[0].hitbox.dy = 0;
-                    numBullets = numBullets + 1;
-                    killDelay = 2;
-                }
-
-                if (!(zakoLine2[i].lives == 0) && (zakoLine2[i].hitbox.left < playerBullet[0].hitbox.left) && 
-                    (zakoLine2[i].hitbox.right > playerBullet[0].hitbox.right) && 
-                    (zakoLine2[i].hitbox.bottom > playerBullet[0].hitbox.top)) {
-                    
-                    zakoLine2[i].lives = 0;
-                    playerBullet[0].isMoving = FALSE;
-                    playerBullet[0].hitbox.dy = 0;
-                    numBullets = numBullets + 1;
-                    killDelay = 2;
-                }
-            }
-
-            if (playerBullet[1].isMoving) {
-                if (!(zakoLine1[i].lives == 0) && (zakoLine1[i].hitbox.left < playerBullet[1].hitbox.left) && 
-                    (zakoLine1[i].hitbox.right > playerBullet[1].hitbox.right) && 
-                    (zakoLine1[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
-                    
-                    zakoLine1[i].lives = 0;
-                    playerBullet[1].isMoving = FALSE;
-                    playerBullet[1].hitbox.dy = 0;
-                    numBullets = numBullets + 1;
-                    killDelay = 2;
-                }
-
-                if (!(zakoLine2[i].lives == 0) && (zakoLine2[i].hitbox.left < playerBullet[1].hitbox.left) && 
-                    (zakoLine2[i].hitbox.right > playerBullet[1].hitbox.right) && 
-                    (zakoLine2[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
-                    
-                    zakoLine2[i].lives = 0;
-                    playerBullet[1].isMoving = FALSE;
-                    playerBullet[1].hitbox.dy = 0;
-                    numBullets = numBullets + 1;
-                    killDelay = 2;
-                }
-            }
-
-            if (zakoLine1[i].lives > 0) {
-                drawObject(zakoLine1[i], (timer/8)%2);
-            }
-
-            if (zakoLine2[i].lives > 0) {
-                drawObject(zakoLine2[i], (timer/8)%2);
-            }
-        }
-        
         timer = timer + 1;
 
         if (killDelay != 0) {
@@ -751,12 +758,14 @@ void drawObject(gameObject object, int spriteNum)
     }
 }
 
-void eraseOldObject(gameObject object) {
-    for (int row = 0; row < object.height; row++) {
-        for (int col = 0; col < object.length; col++) {
-            plot_pixel(object.hitbox.old_x + col, object.hitbox.old_y + row, 0);
+void eraseOldObject(gameObject* object) {
+    for (int row = 0; row < object->height; row++) {
+        for (int col = 0; col < object->length; col++) {
+            plot_pixel(object->hitbox.old_x + col, object->hitbox.old_y + row, 0);
         }
     }
+    object->hitbox.old_x = object->hitbox.x;
+    object->hitbox.old_y = object->hitbox.y;
 }
 
 //bullet functions
@@ -785,12 +794,14 @@ void drawBullet(bullet object) {
     }
 }
 
-void eraseOldBullet(bullet object) {
-    for (int row = 0; row < object.height; row++) {
-        for (int col = 0; col < object.length; col++) {
-            plot_pixel(object.hitbox.old_x + col, object.hitbox.old_y + row, 0);
+void eraseOldBullet(bullet* object) {
+    for (int row = 0; row < object->height; row++) {
+        for (int col = 0; col < object->length; col++) {
+            plot_pixel(object->hitbox.old_x + col, object->hitbox.old_y + row, 0);
         }
     }
+    object->hitbox.old_x = object->hitbox.x;
+    object->hitbox.old_y = object->hitbox.y;
 }
 
 //assets
