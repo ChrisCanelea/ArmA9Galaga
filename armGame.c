@@ -14,6 +14,9 @@
 #define PIXEL_BUF_CTRL_BASE   0xFF203020
 #define CHAR_BUF_CTRL_BASE    0xFF203030
 #define PS2_BASE              0xFF200100
+#define AUDIO_CTRL_BASE       0xFF203040
+
+#define BUF_SIZE 80000
 
 /* VGA colors */
 //#define WHITE 0xFFFF
@@ -71,6 +74,10 @@ typedef struct gameObject
     short int sprite[8][16][16];
     int lives;
     int pointValue;
+    bool isAttacking;
+    int attackPattern[8];
+    int x_offset;
+    int deathTimer;
 } gameObject;
 
 typedef struct bullet
@@ -88,8 +95,13 @@ void getNumString(int a, char score[], int size);
 
 //main loop functions
 void titleScreen();
+void stageTransition();
 int gameLoop();
+void gameOver();
 void initializeStars(int stars[][224]);
+
+void drawEnemyExplosion(gameObject object);
+void eraseOldEnemyExplode(gameObject object);
 
 void initializeBossLine(gameObject* bossLine);
 void initializeGoeiLine(gameObject* goeiLine, int lineNumber);
@@ -115,6 +127,7 @@ void initializeBossGalaga(gameObject* object);
 void initializeGoeiGalaga(gameObject* object);
 void initializeZakoGalaga(gameObject* object);
 void initializePlayerBullet(bullet* object);
+void initializeEnemyBullet(bullet* object);
 
 //rect functions
 rect createRect(int x_, int y_, int length_, int height_, short int colour_);
@@ -144,6 +157,12 @@ volatile int* backBuffAddr;
 volatile int status;
 volatile int* PS2;
 
+//audio globals
+volatile int* audioBaseAddr = (int*) AUDIO_CTRL_BASE;
+int fifospace, buffer_index = 0;
+int left_buffer[BUF_SIZE];
+int right_buffer[BUF_SIZE];
+
 // vga text globals
 int intHighScore = 0;
 char charHighScore[8] = "0000000\0";
@@ -157,6 +176,21 @@ char charStageNumber[3] = "00\0";
 char highScoreText[11] = "HIGH SCORE\0";
 char currentScoreText[14] = "CURRENT SCORE\0";
 char stageText[6] = "STAGE\0";
+char livesText[6] = "LIVES\0";
+int intLives = 3;
+char charLives[2] = "0\0";
+
+int intShotsFired = 0;
+char charShotsFired[5] = "0000\0";
+char shotsFiredText[12] = "Shots Fired\0";
+int intShotsHit = 0;
+char charShotsHit[5] = "0000\0";
+char shotsHitText[10] = "Shots Hit\0";
+char hitMissRatioText[15] = "Hit-Miss Ratio\0";
+char charHitMissRatio[4] = "000\0";
+
+short int selfExplode[4][32][32];
+short int enemyExplode[5][32][32];
 
 int main(void)
 {
@@ -194,7 +228,11 @@ int main(void)
     
     while(1) { // GAME LOOP
         titleScreen();
-        gameLoop();
+        stageTransition();
+        while(gameLoop()) {
+            stageTransition();
+        }
+        gameOver();
     }
 }
 
@@ -211,6 +249,9 @@ void titleScreen() {
     //reset globals and flags
     bool gameStart = FALSE;
     intStageNumber = 0;
+    intShotsFired = 0;
+    intShotsHit = 0;
+    intLives = 3;
 
     if (intCurrentScore > intHighScore) { // update high score if current score is higher than record
         intHighScore = intCurrentScore;
@@ -240,6 +281,7 @@ void titleScreen() {
     getNumString(intHighScore, charHighScore, 8);
     getNumString(intStageNumber, charStageNumber, 3);
     getNumString(intCurrentScore, charCurrentScore, 8); // converts globals into a character string for writing on vga
+    getNumString(intLives, charLives, 2);
 
     writeText(18, 24, startTitle);
 
@@ -250,6 +292,8 @@ void titleScreen() {
     writeText(69, 22, charCurrentScore);
     writeText(71, 31, stageText);
     writeText(74, 33, charStageNumber);
+    writeText(71, 42, livesText);
+    writeText(75, 44, charLives);
 
     writeText(60, 54, credits1);
     writeText(64, 56, credits2);
@@ -267,7 +311,7 @@ void titleScreen() {
             byte2 = byte3;
             byte3 = PS2data & 0xFF;
             
-            if ((byte1 == 0xF0) || (byte2 == 0xF0) || (byte3 == 0xF0)) {
+            if (byte2 == 0xF0) {
                 gameStart = TRUE;
             }
         }
@@ -306,9 +350,198 @@ void titleScreen() {
     }
 }
 
+void stageTransition() {
+    bool gameStart = FALSE;
+    intStageNumber += 1;
+
+    clear_screen();
+
+    //buffer stuff
+    *frontBuffAddr = 1;//swap buffers
+    wait_for_vsync(status, frontBuffAddr); //wait for VGA vertical sync
+    pixel_buffer_start = *backBuffAddr; // new back buffer
+
+    clear_screen();
+    clearText();
+
+    gameObject player = createObject(16, 16); // initialize title screen player (dummy not controllable)
+    initializePlayer(&player);
+    setObjectPos(&player, 104, 220);
+
+    int stars[2][224];
+    initializeStars(stars);
+
+    char startTitle[7] = "Stage \0"; // title screen text prompt
+
+    getNumString(intHighScore, charHighScore, 8);
+    getNumString(intStageNumber, charStageNumber, 3);
+    getNumString(intCurrentScore, charCurrentScore, 8); // converts globals into a character string for writing on vga
+    getNumString(intLives, charLives, 2);
+
+    writeText(24, 24, startTitle);
+    writeText(31, 24, charStageNumber);
+
+    writeText(60, 3, gameTitle);
+    writeText(66, 9, highScoreText);
+    writeText(69, 11, charHighScore);
+    writeText(63, 20, currentScoreText);
+    writeText(69, 22, charCurrentScore);
+    writeText(71, 31, stageText);
+    writeText(74, 33, charStageNumber);
+    writeText(71, 42, livesText);
+    writeText(75, 44, charLives);
+
+    writeText(60, 54, credits1);
+    writeText(64, 56, credits2);
+
+    int PS2data;
+    char byte1 = 0, byte2 = 0, byte3 = 0;
+    *(PS2) = 0xFF; // reset keyboard
+
+    while (!gameStart) {
+        PS2data = *(PS2); // read PS/2 data
+        if (PS2data & 0x8000) { // check RVALID
+            byte1 = byte2;
+            byte2 = byte3;
+            byte3 = PS2data & 0xFF;
+            
+            if (byte2 == 0xF0) {
+                gameStart = TRUE;
+            }
+        }
+
+        //stars
+        int tempOldPos;
+
+        for (int i = 0; i < 224; i++) {
+            // erase old star, draw new star
+            tempOldPos = (stars[0][i] - (2*stars[1][i])); // old star position
+
+            if ((tempOldPos >= 0) && (tempOldPos < 240)) { // erase only if old star in bounds
+                plot_pixel(i,tempOldPos, 0);
+            }
+
+            if (stars[0][i] > 260) { // reset position after star passes screen
+                stars[0][i] = -740;
+            }
+
+            plot_pixel(i,stars[0][i],0xFFFF);
+
+            stars[0][i] += stars[1][i]; // increment position by dy
+        }
+
+        drawObject(player, 1);
+
+        //buffer stuff
+        *frontBuffAddr = 1;//swap buffers
+        wait_for_vsync(status, frontBuffAddr); //wait for VGA vertical sync
+        pixel_buffer_start = *backBuffAddr; // new back buffer
+    }
+    *(keysBaseAddr + 3) = 0xF;
+}
+
+void gameOver() {
+    bool gameStart = FALSE;
+
+    clear_screen();
+
+    //buffer stuff
+    *frontBuffAddr = 1;//swap buffers
+    wait_for_vsync(status, frontBuffAddr); //wait for VGA vertical sync
+    pixel_buffer_start = *backBuffAddr; // new back buffer
+
+    clear_screen();
+    clearText();
+
+    int stars[2][224];
+    initializeStars(stars);
+
+    char startTitle[10] = "GAME OVER\0"; // title screen text prompt
+
+    getNumString(intHighScore, charHighScore, 8);
+    getNumString(intStageNumber, charStageNumber, 3);
+    getNumString(intCurrentScore, charCurrentScore, 8); // converts globals into a character string for writing on vga
+    getNumString(intShotsFired, charShotsFired, 5);
+    getNumString(intShotsHit, charShotsHit, 5);
+    getNumString(intLives, charLives, 2);
+
+    int ratio;
+    if (intShotsHit == 0) {
+        ratio = 0;
+    } else {
+        ratio = (int)((intShotsHit/(float)intShotsFired) * 100);
+    }
+
+    getNumString(ratio, charHitMissRatio, 4);
+
+    writeText(23, 24, startTitle);
+
+    writeText(16, 30, shotsFiredText);
+    writeText(38, 30, charShotsFired);
+    writeText(16, 32, shotsHitText);
+    writeText(38, 32, charShotsHit);
+    writeText(16, 34, hitMissRatioText);
+    writeText(39, 34, charHitMissRatio);
+
+    writeText(60, 3, gameTitle);
+    writeText(66, 9, highScoreText);
+    writeText(69, 11, charHighScore);
+    writeText(63, 20, currentScoreText);
+    writeText(69, 22, charCurrentScore);
+    writeText(71, 31, stageText);
+    writeText(74, 33, charStageNumber);
+    writeText(71, 42, livesText);
+    writeText(75, 44, charLives);
+
+    writeText(60, 54, credits1);
+    writeText(64, 56, credits2);
+
+    int PS2data;
+    char byte1 = 0, byte2 = 0, byte3 = 0;
+    *(PS2) = 0xFF; // reset keyboard
+
+    while (!gameStart) {
+        PS2data = *(PS2); // read PS/2 data
+        if (PS2data & 0x8000) { // check RVALID
+            byte1 = byte2;
+            byte2 = byte3;
+            byte3 = PS2data & 0xFF;
+            
+            if (byte2 == 0xF0) {
+                gameStart = TRUE;
+            }
+        }
+        
+        //stars
+        int tempOldPos;
+
+        for (int i = 0; i < 224; i++) {
+            // erase old star, draw new star
+            tempOldPos = (stars[0][i] - (2*stars[1][i])); // old star position
+
+            if ((tempOldPos >= 0) && (tempOldPos < 240)) { // erase only if old star in bounds
+                plot_pixel(i,tempOldPos, 0);
+            }
+
+            if (stars[0][i] > 260) { // reset position after star passes screen
+                stars[0][i] = -740;
+            }
+
+            plot_pixel(i,stars[0][i],0xFFFF);
+
+            stars[0][i] += stars[1][i]; // increment position by dy
+        }
+
+        //buffer stuff
+        *frontBuffAddr = 1;//swap buffers
+        wait_for_vsync(status, frontBuffAddr); //wait for VGA vertical sync
+        pixel_buffer_start = *backBuffAddr; // new back buffer
+    }
+    *(keysBaseAddr + 3) = 0xF;
+}
+
 int gameLoop() {
     bool gameOver = FALSE; //reset flag
-    intStageNumber += 1;
     
     int numBullets = 2;
     int shotTimer = 7;
@@ -329,14 +562,6 @@ int gameLoop() {
     initializePlayer(&player);
     setObjectPos(&player, 104, 220);
 
-    bullet playerBullet[2];
-    playerBullet[0] = createBullet(3, 8);
-    playerBullet[1] = createBullet(3, 8);
-    initializePlayerBullet(&playerBullet[0]);
-    initializePlayerBullet(&playerBullet[1]);
-    setBulletPos(&playerBullet[0], player.hitbox.x + 6, player.hitbox.y);
-    setBulletPos(&playerBullet[1], player.hitbox.x + 6, player.hitbox.y);
-
     gameObject bossLine[4];
     gameObject goeiLine1[8];
     gameObject goeiLine2[8];
@@ -349,6 +574,44 @@ int gameLoop() {
     initializeZakoLine(zakoLine1, 1);
     initializeZakoLine(zakoLine2, 2);
 
+    bullet playerBullet[2];
+    playerBullet[0] = createBullet(3, 8);
+    playerBullet[1] = createBullet(3, 8);
+    initializePlayerBullet(&playerBullet[0]);
+    initializePlayerBullet(&playerBullet[1]);
+    setBulletPos(&playerBullet[0], player.hitbox.x + 6, player.hitbox.y);
+    setBulletPos(&playerBullet[1], player.hitbox.x + 6, player.hitbox.y);
+
+    bullet bossBullet[4];
+    bullet goeiBullet1[8];
+    bullet goeiBullet2[8];
+    bullet zakoBullet1[10];
+    bullet zakoBullet2[10];
+
+    int randNum; //reusable rand number
+
+    for (int i = 0; i < 10; i++) {
+        if (i < 4) {
+            bossBullet[i] = createBullet(3,8);
+            initializeEnemyBullet(&bossBullet[i]);
+            setBulletPos(&bossBullet[i], bossLine[i].hitbox.x + 7, bossLine[i].hitbox.y);
+        }
+        if (i < 8) {
+            goeiBullet1[i] = createBullet(3,8);
+            goeiBullet2[i] = createBullet(3,8);
+            initializeEnemyBullet(&goeiBullet1[i]);
+            initializeEnemyBullet(&goeiBullet2[i]);
+            setBulletPos(&goeiBullet1[i], goeiLine1[i].hitbox.x + 7, goeiLine1[i].hitbox.y);
+            setBulletPos(&goeiBullet2[i], goeiLine2[i].hitbox.x + 7, goeiLine2[i].hitbox.y);
+        }
+        zakoBullet1[i] = createBullet(3,8);
+        zakoBullet2[i] = createBullet(3,8);
+        initializeEnemyBullet(&zakoBullet1[i]);
+        initializeEnemyBullet(&zakoBullet2[i]);
+        setBulletPos(&zakoBullet1[i], zakoLine1[i].hitbox.x + 7, zakoLine1[i].hitbox.y);
+        setBulletPos(&zakoBullet2[i], zakoLine2[i].hitbox.x + 7, zakoLine2[i].hitbox.y);
+    }
+
     int stars[2][224];
     initializeStars(stars);
 
@@ -356,17 +619,28 @@ int gameLoop() {
     char byte1 = 0, byte2 = 0, byte3 = 0;
     *(PS2) = 0xFF; // reset keyboard
 
+    int remainingEnemies = 40;
+
     while (!gameOver)
     {   
         // DEBUG STUFF
-        if (*(keysBaseAddr + 3) & 0x2) { // KEY3 ENDS GAME
-            *(keysBaseAddr + 3) = 0xF;
-            gameOver = TRUE;
+        if (*(keysBaseAddr + 3) & 0x8) { // KEY3 ENDS GAME
+            player.lives = 0;
         }
+        if (*(keysBaseAddr + 3) & 0x4) { // KEY2 REMOVES A LIFE
+            player.lives--;
+        }
+        if (*(keysBaseAddr + 3) & 0x2) { // KEY1 MAKES ENEMIES REMAINING 0
+            remainingEnemies = 0;
+        }
+        *(keysBaseAddr + 3) = 0xF;
+
+        intLives = player.lives;
 
         getNumString(intStageNumber, charStageNumber, 3);
         getNumString(intCurrentScore, charCurrentScore, 8); // converts globals into a character string for writing on vga
-        
+        getNumString(intLives, charLives, 2);
+
         writeText(60, 3, gameTitle);
         writeText(66, 9, highScoreText);
         writeText(69, 11, charHighScore);
@@ -374,6 +648,8 @@ int gameLoop() {
         writeText(69, 22, charCurrentScore);
         writeText(71, 31, stageText);
         writeText(74, 33, charStageNumber);
+        writeText(71, 42, livesText);
+        writeText(75, 44, charLives);
 
         writeText(60, 54, credits1);
         writeText(64, 56, credits2);
@@ -419,16 +695,19 @@ int gameLoop() {
                 playerBullet[0].hitbox.dy = -5;
                 numBullets = 1;
                 shotTimer = 7;
+                intShotsFired++;
             } else if ((numBullets == 1) && (killDelay == 0)) {
                 if (shotTimer <= 0) {
                     if (playerBullet[1].isMoving) {
                         playerBullet[0].isMoving = TRUE;
                         playerBullet[0].hitbox.dy = -5;
                         numBullets = 0;
+                        intShotsFired++;
                     } else {
                         playerBullet[1].isMoving = TRUE;
                         playerBullet[1].hitbox.dy = -5;
                         numBullets = 0;
+                        intShotsFired++;
                     }
                 }
             }
@@ -448,203 +727,523 @@ int gameLoop() {
             killDelay = 2;
         }
 
-        for (int i = 0; i < 10; i++) {//draw all new enemy objects
-            if (i < 4) {//bossLine
-                eraseOldObject(&bossLine[i]); // only erase boss if it is alive, else its always not being displayed
-                if (bossLine[i].hitbox.y < 16) {
-                    bossLine[i].hitbox.dy = 1;
-                } else {
-                    bossLine[i].hitbox.dy = 0;
-                }
+        //stars
+        int tempOldPos;
 
-                updateObjectPos(&bossLine[i]);
-
-                if (playerBullet[0].isMoving) {
-                    if (!(bossLine[i].lives == 0) && (bossLine[i].hitbox.left < playerBullet[0].hitbox.left) &&
-                        (bossLine[i].hitbox.right > playerBullet[0].hitbox.right) && 
-                        (bossLine[i].hitbox.bottom > playerBullet[0].hitbox.top)) {
-                        
-                        bossLine[i].lives = bossLine[i].lives - 1;
-                        playerBullet[0].isMoving = FALSE;
-                        playerBullet[0].hitbox.dy = 0;
-                        numBullets = numBullets + 1;
-                        killDelay = 2;
-                        intCurrentScore = intCurrentScore + bossLine[i].pointValue;
-                    }
-                }
-
-                if (playerBullet[1].isMoving) {
-                    if (!(bossLine[i].lives == 0) && (bossLine[i].hitbox.left < playerBullet[1].hitbox.left) && 
-                        (bossLine[i].hitbox.right > playerBullet[1].hitbox.right) && 
-                        (bossLine[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
-                        
-                        bossLine[i].lives = bossLine[i].lives - 1;
-                        playerBullet[1].isMoving = FALSE;
-                        playerBullet[1].hitbox.dy = 0;
-                        numBullets = numBullets + 1;
-                        killDelay = 2;
-                        intCurrentScore = intCurrentScore + bossLine[i].pointValue;
-                    }
-                }
-
+        for (int i = 0; i < 224; i++) { // erase enemies and draw stars
+        
+            if (i < 4) { // erase bossLine and determine if attacking
                 if (bossLine[i].lives > 0) {
-                    drawObject(bossLine[i], (timer/8)%2); // (timer/8)%2
+                    eraseOldObject(&bossLine[i]);
+                } else if ((bossLine[i].deathTimer >= 0) && (bossLine[i].deathTimer <= 5)) {
+                    eraseOldEnemyExplode(bossLine[i]);
+                }
+
+                if (rand()%1000 == 0) {
+                    bossLine[rand()%4].isAttacking = TRUE;
                 }
             }
-            if (i < 8) {//goeiLines
-                eraseOldObject(&goeiLine1[i]); // only erase goei if it is alive, else its always not being displayed
-                eraseOldObject(&goeiLine2[i]);
-                if (goeiLine1[i].hitbox.y < 32) {
-                    goeiLine1[i].hitbox.dy = 1;
-                } else {
-                    goeiLine1[i].hitbox.dy = 0;
-                }
-
-                if (goeiLine2[i].hitbox.y < 48) {
-                    goeiLine2[i].hitbox.dy = 1;
-                } else {
-                    goeiLine2[i].hitbox.dy = 0;
-                }
-
-                updateObjectPos(&goeiLine1[i]);
-                updateObjectPos(&goeiLine2[i]);
-
-                if (playerBullet[0].isMoving) {
-                    if (!(goeiLine1[i].lives == 0) && (goeiLine1[i].hitbox.left < playerBullet[0].hitbox.left) &&
-                        (goeiLine1[i].hitbox.right > playerBullet[0].hitbox.right) && 
-                        (goeiLine1[i].hitbox.bottom > playerBullet[0].hitbox.top)) {
-                        
-                        goeiLine1[i].lives = 0;
-                        playerBullet[0].isMoving = FALSE;
-                        playerBullet[0].hitbox.dy = 0;
-                        numBullets = numBullets + 1;
-                        killDelay = 2;
-                        intCurrentScore = intCurrentScore + goeiLine1[i].pointValue;
-                    }
-
-                    if (!(goeiLine2[i].lives == 0) && (goeiLine2[i].hitbox.left < playerBullet[0].hitbox.left) && 
-                        (goeiLine2[i].hitbox.right > playerBullet[0].hitbox.right) && 
-                        (goeiLine2[i].hitbox.bottom > playerBullet[0].hitbox.top)) {
-                        
-                        goeiLine2[i].lives = 0;
-                        playerBullet[0].isMoving = FALSE;
-                        playerBullet[0].hitbox.dy = 0;
-                        numBullets = numBullets + 1;
-                        killDelay = 2;
-                        intCurrentScore = intCurrentScore + goeiLine2[i].pointValue;
-                    }
-                }
-
-                if (playerBullet[1].isMoving) {
-                    if (!(goeiLine1[i].lives == 0) && (goeiLine1[i].hitbox.left < playerBullet[1].hitbox.left) && 
-                        (goeiLine1[i].hitbox.right > playerBullet[1].hitbox.right) && 
-                        (goeiLine1[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
-                        
-                        goeiLine1[i].lives = 0;
-                        playerBullet[1].isMoving = FALSE;
-                        playerBullet[1].hitbox.dy = 0;
-                        numBullets = numBullets + 1;
-                        killDelay = 2;
-                        intCurrentScore = intCurrentScore + goeiLine1[i].pointValue;
-                    }
-
-                    if (!(goeiLine2[i].lives == 0) && (goeiLine2[i].hitbox.left < playerBullet[1].hitbox.left) && 
-                        (goeiLine2[i].hitbox.right > playerBullet[1].hitbox.right) && 
-                        (goeiLine2[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
-                        
-                        goeiLine2[i].lives = 0;
-                        playerBullet[1].isMoving = FALSE;
-                        playerBullet[1].hitbox.dy = 0;
-                        numBullets = numBullets + 1;
-                        killDelay = 2;
-                        intCurrentScore = intCurrentScore + goeiLine2[i].pointValue;
-                    }
-                }
-
+            
+            if (i < 8) { //erase goeiLines and determine if attacking
                 if (goeiLine1[i].lives > 0) {
-                    drawObject(goeiLine1[i], (timer/8)%2);
+                    eraseOldObject(&goeiLine1[i]);
+                } else if ((goeiLine1[i].deathTimer >= 0) && (goeiLine1[i].deathTimer <= 5)) {
+                    eraseOldEnemyExplode(goeiLine1[i]);
+                }
+                if (rand()%1000 == 0) {
+                    goeiLine1[rand()%8].isAttacking = TRUE;
                 }
 
                 if (goeiLine2[i].lives > 0) {
-                    drawObject(goeiLine2[i], (timer/8)%2);
+                    eraseOldObject(&goeiLine2[i]);
+                } else if ((goeiLine2[i].deathTimer >= 0) && (goeiLine2[i].deathTimer <= 5)) {
+                    eraseOldEnemyExplode(goeiLine2[i]);
+                }
+                if (rand()%1000 == 0) {
+                    goeiLine2[rand()%8].isAttacking = TRUE;
                 }
             }
-            //zakoLines
-            eraseOldObject(&zakoLine1[i]); // only zako boss if it is alive, else its always not being displayed
-            eraseOldObject(&zakoLine2[i]);
-            if (zakoLine1[i].hitbox.y < 64) {
-                zakoLine1[i].hitbox.dy = 1;
-            } else {
-                zakoLine1[i].hitbox.dy = 0;
+
+            if (i < 10) { // erase zakoLines
+                if (zakoLine1[i].lives > 0) {
+                    eraseOldObject(&zakoLine1[i]);
+                } else if ((zakoLine1[i].deathTimer >= 0) && (zakoLine1[i].deathTimer <= 5)) {
+                    eraseOldEnemyExplode(zakoLine1[i]);
+                }
+                if (rand()%1000 == 0) {
+                    zakoLine1[rand()%10].isAttacking = TRUE;
+                }
+
+                if (zakoLine2[i].lives > 0) {
+                    eraseOldObject(&zakoLine2[i]);
+                } else if ((zakoLine2[i].deathTimer >= 0) && (zakoLine2[i].deathTimer <= 5)) {
+                    eraseOldEnemyExplode(zakoLine2[i]);
+                }
+                if (rand()%1000 == 0) {
+                    zakoLine2[rand()%10].isAttacking = TRUE;
+                }
+            }
+
+            // erase old star, draw new star
+            tempOldPos = (stars[0][i] - (2*stars[1][i]));
+
+            if ((tempOldPos >= 0) && (tempOldPos < 240)) {
+                plot_pixel(i,tempOldPos, 0);
+            }
+
+            if (stars[0][i] > 260) { // reset position after star passes screen
+                stars[0][i] = -740;
+            }
+
+            plot_pixel(i,stars[0][i], 0xFFFF);
+
+            stars[0][i] += stars[1][i]; // increment position by dy
+        }
+                
+        for (int i = 0; i < 10; i++) { //draw all new enemy objects
+            if (i < 4) { // determine bossLine movement and death
+                if (bossBullet[i].isMoving) {
+                    eraseOldBullet(&bossBullet[i]);
+                }
+
+                if (y_outOfBounds(bossBullet[i].hitbox, 0, 239)) {
+                    bossBullet[i].isMoving = FALSE;
+                    bossBullet[i].hitbox.dy = 0;
+                    bossBullet[i].hitbox.dx = 0;
+                    eraseOldBullet(&bossBullet[i]);
+                }
+
+                if (bossLine[i].lives > 0) {
+                    if (bossLine[i].hitbox.y < 16) {
+                        bossLine[i].hitbox.dy = 1;
+                        bossLine[i].hitbox.dx = 0;
+                        bossLine[i].x_offset = 0;
+                    } else if (bossLine[i].hitbox.top > 240) {
+                        bossLine[i].hitbox.dy = -300;
+                        bossLine[i].hitbox.dx = -bossLine[i].x_offset;
+                        bossLine[i].x_offset = 0;
+                        bossLine[i].isAttacking = FALSE;
+                    } else if (bossLine[i].isAttacking) {
+                        bossLine[i].hitbox.dy = 2;
+                        bossLine[i].hitbox.dx = bossLine[i].attackPattern[(timer/4)%8];
+                        bossLine[i].x_offset = bossLine[i].x_offset + bossLine[i].hitbox.dx;
+                    } else {
+                        bossLine[i].hitbox.dy = 0;
+                        bossLine[i].hitbox.dx = 0;
+                        bossLine[i].x_offset = 0;
+                    }
+
+                    updateObjectPos(&bossLine[i]);
+                
+                    if (playerBullet[0].isMoving) {
+                        if (!(bossLine[i].lives == 0) && (bossLine[i].hitbox.left < playerBullet[0].hitbox.left) &&
+                            (bossLine[i].hitbox.right > playerBullet[0].hitbox.right) && 
+                            (bossLine[i].hitbox.bottom > playerBullet[0].hitbox.top)) {
+                            
+                            bossLine[i].lives = bossLine[i].lives - 1;
+                            playerBullet[0].isMoving = FALSE;
+                            playerBullet[0].hitbox.dy = 0;
+                            numBullets = numBullets + 1;
+                            killDelay = 2;
+                            if (bossLine[i].lives == 0) {
+                                intCurrentScore = intCurrentScore + bossLine[i].pointValue;
+                                remainingEnemies--;
+                            }
+                            intShotsHit++;
+                            bossLine[i].deathTimer = 0;
+                        }
+                    }
+
+                    if (playerBullet[1].isMoving) {
+                        if (!(bossLine[i].lives == 0) && (bossLine[i].hitbox.left < playerBullet[1].hitbox.left) && 
+                            (bossLine[i].hitbox.right > playerBullet[1].hitbox.right) && 
+                            (bossLine[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
+                            
+                            bossLine[i].lives = bossLine[i].lives - 1;
+                            playerBullet[1].isMoving = FALSE;
+                            playerBullet[1].hitbox.dy = 0;
+                            numBullets = numBullets + 1;
+                            killDelay = 2;
+                            if (bossLine[i].lives == 0) {
+                                intCurrentScore = intCurrentScore + bossLine[i].pointValue;
+                                remainingEnemies--;
+                            }
+                            intShotsHit++;
+                            bossLine[i].deathTimer = 0;
+                        }
+                    }
+
+                    randNum = rand()%(4000 - (((intStageNumber * 250) > 3750) ? 100 : (intStageNumber * 250)));
+                    if (!(bossBullet[i].isMoving) && (randNum == 0)) {
+                        bossBullet[i].isMoving = TRUE;
+                        bossBullet[i].hitbox.dy = 3;
+                        bossBullet[i].hitbox.dx = (bossLine[i].hitbox.dx + rand()%3)%3; // same x momentum as enemy
+                    }
+
+                    drawObject(bossLine[i], (timer/8)%2); // (timer/8)%2
+                } else if ((bossLine[i].deathTimer >= 0) && (bossLine[i].deathTimer <= 4)) {
+                    drawEnemyExplosion(bossLine[i]);
+                    bossLine[i].deathTimer += 1;
+                }
+            }
+            if (i < 8) { // determine goeiLines movement and death
+                if (goeiBullet1[i].isMoving) {
+                    eraseOldBullet(&goeiBullet1[i]);
+                }
+
+                if (y_outOfBounds(goeiBullet1[i].hitbox, 0, 239)) {
+                    goeiBullet1[i].isMoving = FALSE;
+                    goeiBullet1[i].hitbox.dy = 0;
+                    goeiBullet1[i].hitbox.dx = 0;
+                    eraseOldBullet(&goeiBullet1[i]);
+                }
+
+                if (goeiLine1[i].lives > 0) {
+                    if (goeiLine1[i].hitbox.y < 32) {
+                        goeiLine1[i].hitbox.dy = 1;
+                        goeiLine1[i].hitbox.dx = 0;
+                        goeiLine1[i].x_offset = 0;
+                    } else if (goeiLine1[i].hitbox.top > 240) {
+                        goeiLine1[i].hitbox.dy = -300;
+                        goeiLine1[i].hitbox.dx = -goeiLine1[i].x_offset;
+                        goeiLine1[i].x_offset = 0;
+                        goeiLine1[i].isAttacking = FALSE;
+                    } else if (goeiLine1[i].isAttacking) {
+                        goeiLine1[i].hitbox.dy = 2;
+                        goeiLine1[i].hitbox.dx = goeiLine1[i].attackPattern[(timer/4)%8];
+                        goeiLine1[i].x_offset = goeiLine1[i].x_offset + goeiLine1[i].hitbox.dx;
+                    } else {
+                        goeiLine1[i].hitbox.dy = 0;
+                        goeiLine1[i].hitbox.dx = 0;
+                        goeiLine1[i].x_offset = 0;
+                    }
+
+                    updateObjectPos(&goeiLine1[i]);
+
+                    if (playerBullet[0].isMoving) {
+                        if (!(goeiLine1[i].lives == 0) && (goeiLine1[i].hitbox.left < playerBullet[0].hitbox.left) &&
+                            (goeiLine1[i].hitbox.right > playerBullet[0].hitbox.right) && 
+                            (goeiLine1[i].hitbox.bottom > playerBullet[0].hitbox.top)) {
+                            
+                            goeiLine1[i].lives = 0;
+                            playerBullet[0].isMoving = FALSE;
+                            playerBullet[0].hitbox.dy = 0;
+                            numBullets = numBullets + 1;
+                            killDelay = 2;
+                            intCurrentScore = intCurrentScore + goeiLine1[i].pointValue;
+                            goeiLine1[i].deathTimer = 0;
+                            remainingEnemies--;
+                            intShotsHit++;
+                        }
+                    }
+                    if (playerBullet[1].isMoving) {
+                        if (!(goeiLine1[i].lives == 0) && (goeiLine1[i].hitbox.left < playerBullet[1].hitbox.left) && 
+                            (goeiLine1[i].hitbox.right > playerBullet[1].hitbox.right) && 
+                            (goeiLine1[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
+                            
+                            goeiLine1[i].lives = 0;
+                            playerBullet[1].isMoving = FALSE;
+                            playerBullet[1].hitbox.dy = 0;
+                            numBullets = numBullets + 1;
+                            killDelay = 2;
+                            intCurrentScore = intCurrentScore + goeiLine1[i].pointValue;
+                            goeiLine1[i].deathTimer = 0;
+                            remainingEnemies--;
+                            intShotsHit++;
+                        }
+                    }
+
+                    randNum = rand()%(4000 - (((intStageNumber * 250) > 3750) ? 100 : (intStageNumber * 250)));
+                    if (!(goeiBullet1[i].isMoving) && (randNum == 0)) {
+                        goeiBullet1[i].isMoving = TRUE;
+                        goeiBullet1[i].hitbox.dy = 3;
+                        goeiBullet1[i].hitbox.dx = (goeiLine1[i].hitbox.dx + rand()%3)%3; // same x momentum as enemy
+                    }
+
+                    drawObject(goeiLine1[i], (timer/8)%2);
+                } else if ((goeiLine1[i].deathTimer >= 0) && (goeiLine1[i].deathTimer <= 4)) {
+                    drawEnemyExplosion(goeiLine1[i]);
+                    goeiLine1[i].deathTimer += 1;
+                }
+
+                if (goeiBullet2[i].isMoving) {
+                    eraseOldBullet(&goeiBullet2[i]);
+                }  
+
+                if (y_outOfBounds(goeiBullet2[i].hitbox, 0, 239)) {
+                    goeiBullet2[i].isMoving = FALSE;
+                    goeiBullet2[i].hitbox.dy = 0;
+                    goeiBullet2[i].hitbox.dx = 0;
+                    eraseOldBullet(&goeiBullet2[i]);
+                }
+
+                if (goeiLine2[i].lives > 0) {
+                    if (goeiLine2[i].hitbox.y < 48) {
+                        goeiLine2[i].hitbox.dy = 1;
+                        goeiLine2[i].hitbox.dx = 0;
+                        goeiLine2[i].x_offset = 0;
+                    } else if (goeiLine2[i].hitbox.top > 240) {
+                        goeiLine2[i].hitbox.dy = -300;
+                        goeiLine2[i].hitbox.dx = -goeiLine2[i].x_offset;
+                        goeiLine2[i].x_offset = 0;
+                        goeiLine2[i].isAttacking = FALSE;
+                    } else if (goeiLine2[i].isAttacking) {
+                        goeiLine2[i].hitbox.dy = 2;
+                        goeiLine2[i].hitbox.dx = goeiLine2[i].attackPattern[(timer/4)%8];
+                        goeiLine2[i].x_offset = goeiLine2[i].x_offset + goeiLine2[i].hitbox.dx;
+                    } else {
+                        goeiLine2[i].hitbox.dy = 0;
+                        goeiLine2[i].hitbox.dx = 0;
+                        goeiLine2[i].x_offset = 0;
+                    }
+
+                    updateObjectPos(&goeiLine2[i]);
+
+                    if (playerBullet[0].isMoving) {
+                        if (!(goeiLine2[i].lives == 0) && (goeiLine2[i].hitbox.left < playerBullet[0].hitbox.left) && 
+                            (goeiLine2[i].hitbox.right > playerBullet[0].hitbox.right) && 
+                            (goeiLine2[i].hitbox.bottom > playerBullet[0].hitbox.top)) {
+                            
+                            goeiLine2[i].lives = 0;
+                            playerBullet[0].isMoving = FALSE;
+                            playerBullet[0].hitbox.dy = 0;
+                            numBullets = numBullets + 1;
+                            killDelay = 2;
+                            intCurrentScore = intCurrentScore + goeiLine2[i].pointValue;
+                            goeiLine2[i].deathTimer = 0;
+                            remainingEnemies--;
+                            intShotsHit++;
+                        }
+                    }
+                    if (playerBullet[1].isMoving) {
+                        if (!(goeiLine2[i].lives == 0) && (goeiLine2[i].hitbox.left < playerBullet[1].hitbox.left) && 
+                            (goeiLine2[i].hitbox.right > playerBullet[1].hitbox.right) && 
+                            (goeiLine2[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
+                            
+                            goeiLine2[i].lives = 0;
+                            playerBullet[1].isMoving = FALSE;
+                            playerBullet[1].hitbox.dy = 0;
+                            numBullets = numBullets + 1;
+                            killDelay = 2;
+                            intCurrentScore = intCurrentScore + goeiLine2[i].pointValue;
+                            goeiLine2[i].deathTimer = 0;
+                            remainingEnemies--;
+                            intShotsHit++;
+                        }
+                    }
+
+                    randNum = rand()%(4000 - (((intStageNumber * 250) > 3750) ? 100 : (intStageNumber * 250)));
+                    if (!(goeiBullet2[i].isMoving) && (randNum == 0)) {
+                        goeiBullet2[i].isMoving = TRUE;
+                        goeiBullet2[i].hitbox.dy = 3;
+                        goeiBullet2[i].hitbox.dx = (goeiLine2[i].hitbox.dx + rand()%3)%3; // same x momentum as enemy
+                    }
+
+                    drawObject(goeiLine2[i], (timer/8)%2);
+                } else if ((goeiLine2[i].deathTimer >= 0) && (goeiLine2[i].deathTimer <= 4)) {
+                    drawEnemyExplosion(goeiLine2[i]);
+                    goeiLine2[i].deathTimer += 1;
+                }
+            }
+
+            if (zakoBullet1[i].isMoving) {
+                eraseOldBullet(&zakoBullet1[i]);
+            }
+
+            if (y_outOfBounds(zakoBullet1[i].hitbox, 0, 239)) {
+                zakoBullet1[i].isMoving = FALSE;
+                zakoBullet1[i].hitbox.dy = 0;
+                zakoBullet1[i].hitbox.dx = 0;
+                eraseOldBullet(&zakoBullet1[i]);
+            }
+
+            if (zakoLine1[i].lives > 0) { // determine zakoLines movement and death
+                if (zakoLine1[i].hitbox.y < 64) {
+                    zakoLine1[i].hitbox.dy = 1;
+                    zakoLine1[i].hitbox.dx = 0;
+                    zakoLine1[i].x_offset = 0;
+                } else if (zakoLine1[i].hitbox.top > 240) {
+                    zakoLine1[i].hitbox.dy = -300;
+                    zakoLine1[i].hitbox.dx = -zakoLine1[i].x_offset;
+                    zakoLine1[i].x_offset = 0;
+                    zakoLine1[i].isAttacking = FALSE;
+                } else if (zakoLine1[i].isAttacking) {
+                    zakoLine1[i].hitbox.dy = 2;
+                    zakoLine1[i].hitbox.dx = zakoLine1[i].attackPattern[(timer/4)%8];
+                    zakoLine1[i].x_offset = zakoLine1[i].x_offset + zakoLine1[i].hitbox.dx;
+                } else {
+                    zakoLine1[i].hitbox.dy = 0;
+                    zakoLine1[i].hitbox.dx = 0;
+                    zakoLine1[i].x_offset = 0;
+                }
+
+                updateObjectPos(&zakoLine1[i]);
+
+                if (playerBullet[0].isMoving) {
+                    if (!(zakoLine1[i].lives == 0) && (zakoLine1[i].hitbox.left < playerBullet[0].hitbox.left) &&
+                        (zakoLine1[i].hitbox.right > playerBullet[0].hitbox.right) && 
+                        (zakoLine1[i].hitbox.bottom > playerBullet[0].hitbox.top)) {
+                        
+                        zakoLine1[i].lives = 0;
+                        playerBullet[0].isMoving = FALSE;
+                        playerBullet[0].hitbox.dy = 0;
+                        numBullets = numBullets + 1;
+                        killDelay = 2;
+                        intCurrentScore = intCurrentScore + zakoLine1[i].pointValue;
+                        zakoLine1[i].deathTimer = 0;
+                        remainingEnemies--;
+                        intShotsHit++;
+                    }
+                }
+                if (playerBullet[1].isMoving) {
+                    if (!(zakoLine1[i].lives == 0) && (zakoLine1[i].hitbox.left < playerBullet[1].hitbox.left) && 
+                        (zakoLine1[i].hitbox.right > playerBullet[1].hitbox.right) && 
+                        (zakoLine1[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
+                        
+                        zakoLine1[i].lives = 0;
+                        playerBullet[1].isMoving = FALSE;
+                        playerBullet[1].hitbox.dy = 0;
+                        numBullets = numBullets + 1;
+                        killDelay = 2;
+                        intCurrentScore = intCurrentScore + zakoLine1[i].pointValue;
+                        zakoLine1[i].deathTimer = 0;
+                        remainingEnemies--;
+                        intShotsHit++;
+                    }
+                }
+
+                randNum = rand()%(4000 - (((intStageNumber * 250) > 3750) ? 100 : (intStageNumber * 250)));
+                if (!(zakoBullet1[i].isMoving) && (randNum == 0)) {
+                    zakoBullet1[i].isMoving = TRUE;
+                    zakoBullet1[i].hitbox.dy = 3;
+                    zakoBullet1[i].hitbox.dx = (zakoLine1[i].hitbox.dx + rand()%3)%3; // same x momentum as enemy
+                }
+                
+                drawObject(zakoLine1[i], (timer/8)%2);
+            } else if ((zakoLine1[i].deathTimer >= 0) && (zakoLine1[i].deathTimer <= 4)) {
+                drawEnemyExplosion(zakoLine1[i]);
+                zakoLine1[i].deathTimer += 1;
             }
             
-            if (zakoLine2[i].hitbox.y < 80) {
-                zakoLine2[i].hitbox.dy = 1;
-            } else {
-                zakoLine2[i].hitbox.dy = 0;
+            if (zakoBullet2[i].isMoving) {
+                eraseOldBullet(&zakoBullet2[i]);
             }
 
-            updateObjectPos(&zakoLine1[i]);
-            updateObjectPos(&zakoLine2[i]);
-
-            if (playerBullet[0].isMoving) {
-                if (!(zakoLine1[i].lives == 0) && (zakoLine1[i].hitbox.left < playerBullet[0].hitbox.left) && //SHOULD BE PLAYERBULLET[0]
-                    (zakoLine1[i].hitbox.right > playerBullet[0].hitbox.right) && 
-                    (zakoLine1[i].hitbox.bottom > playerBullet[0].hitbox.top)) {
-                    
-                    zakoLine1[i].lives = 0;
-                    playerBullet[0].isMoving = FALSE;
-                    playerBullet[0].hitbox.dy = 0;
-                    numBullets = numBullets + 1;
-                    killDelay = 2;
-                    intCurrentScore = intCurrentScore + zakoLine1[i].pointValue;
-                }
-
-                if (!(zakoLine2[i].lives == 0) && (zakoLine2[i].hitbox.left < playerBullet[0].hitbox.left) && 
-                    (zakoLine2[i].hitbox.right > playerBullet[0].hitbox.right) && 
-                    (zakoLine2[i].hitbox.bottom > playerBullet[0].hitbox.top)) {
-                    
-                    zakoLine2[i].lives = 0;
-                    playerBullet[0].isMoving = FALSE;
-                    playerBullet[0].hitbox.dy = 0;
-                    numBullets = numBullets + 1;
-                    killDelay = 2;
-                    intCurrentScore = intCurrentScore + zakoLine2[i].pointValue;
-                }
-            }
-
-            if (playerBullet[1].isMoving) {
-                if (!(zakoLine1[i].lives == 0) && (zakoLine1[i].hitbox.left < playerBullet[1].hitbox.left) && 
-                    (zakoLine1[i].hitbox.right > playerBullet[1].hitbox.right) && 
-                    (zakoLine1[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
-                    
-                    zakoLine1[i].lives = 0;
-                    playerBullet[1].isMoving = FALSE;
-                    playerBullet[1].hitbox.dy = 0;
-                    numBullets = numBullets + 1;
-                    killDelay = 2;
-                    intCurrentScore = intCurrentScore + zakoLine1[i].pointValue;
-                }
-
-                if (!(zakoLine2[i].lives == 0) && (zakoLine2[i].hitbox.left < playerBullet[1].hitbox.left) && 
-                    (zakoLine2[i].hitbox.right > playerBullet[1].hitbox.right) && 
-                    (zakoLine2[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
-                    
-                    zakoLine2[i].lives = 0;
-                    playerBullet[1].isMoving = FALSE;
-                    playerBullet[1].hitbox.dy = 0;
-                    numBullets = numBullets + 1;
-                    killDelay = 2;
-                    intCurrentScore = intCurrentScore + zakoLine2[i].pointValue;
-                }
-            }
-
-            if (zakoLine1[i].lives > 0) {
-                drawObject(zakoLine1[i], (timer/8)%2);
+            if (y_outOfBounds(zakoBullet2[i].hitbox, 0, 239)) {
+                zakoBullet2[i].isMoving = FALSE;
+                zakoBullet2[i].hitbox.dy = 0;
+                zakoBullet2[i].hitbox.dx = 0;
+                eraseOldBullet(&zakoBullet2[i]);
             }
 
             if (zakoLine2[i].lives > 0) {
+                if (zakoLine2[i].hitbox.y < 80) {
+                    zakoLine2[i].hitbox.dy = 1;
+                    zakoLine2[i].hitbox.dx = 0;
+                    zakoLine2[i].x_offset = 0;
+                } else if (zakoLine2[i].hitbox.top > 240) {
+                    zakoLine2[i].hitbox.dy = -300;
+                    zakoLine2[i].hitbox.dx = -zakoLine2[i].x_offset;
+                    zakoLine2[i].x_offset = 0;
+                    zakoLine2[i].isAttacking = FALSE;
+                } else if (zakoLine2[i].isAttacking) {
+                    zakoLine2[i].hitbox.dy = 2;
+                    zakoLine2[i].hitbox.dx = zakoLine2[i].attackPattern[(timer/4)%8];
+                    zakoLine2[i].x_offset = zakoLine2[i].x_offset + zakoLine2[i].hitbox.dx;
+                } else {
+                    zakoLine2[i].hitbox.dy = 0;
+                    zakoLine2[i].hitbox.dx = 0;
+                    zakoLine2[i].x_offset = 0;
+                }
+
+                updateObjectPos(&zakoLine2[i]);
+
+                if (playerBullet[0].isMoving) {
+                    if (!(zakoLine2[i].lives == 0) && (zakoLine2[i].hitbox.left < playerBullet[0].hitbox.left) && 
+                        (zakoLine2[i].hitbox.right > playerBullet[0].hitbox.right) && 
+                        (zakoLine2[i].hitbox.bottom > playerBullet[0].hitbox.top)) {
+                        
+                        zakoLine2[i].lives = 0;
+                        playerBullet[0].isMoving = FALSE;
+                        playerBullet[0].hitbox.dy = 0;
+                        numBullets = numBullets + 1;
+                        killDelay = 2;
+                        intCurrentScore = intCurrentScore + zakoLine2[i].pointValue;
+                        zakoLine2[i].deathTimer = 0;
+                        remainingEnemies--;
+                        intShotsHit++;
+                    }
+                }
+                if (playerBullet[1].isMoving) {
+                    if (!(zakoLine2[i].lives == 0) && (zakoLine2[i].hitbox.left < playerBullet[1].hitbox.left) && 
+                        (zakoLine2[i].hitbox.right > playerBullet[1].hitbox.right) && 
+                        (zakoLine2[i].hitbox.bottom > playerBullet[1].hitbox.top)) {
+                        
+                        zakoLine2[i].lives = 0;
+                        playerBullet[1].isMoving = FALSE;
+                        playerBullet[1].hitbox.dy = 0;
+                        numBullets = numBullets + 1;
+                        killDelay = 2;
+                        intCurrentScore = intCurrentScore + zakoLine2[i].pointValue;
+                        zakoLine2[i].deathTimer = 0;
+                        remainingEnemies--;
+                        intShotsHit++;
+                    }
+                }
+
+                randNum = rand()%(4000 - (((intStageNumber * 250) > 3750) ? 100 : (intStageNumber * 250)));
+                if (!(zakoBullet2[i].isMoving) && (randNum == 0)) {
+                    zakoBullet2[i].isMoving = TRUE;
+                    zakoBullet2[i].hitbox.dy = 3;
+                    zakoBullet2[i].hitbox.dx = (zakoLine2[i].hitbox.dx + rand()%3)%3; // same x momentum as enemy
+                }
+
                 drawObject(zakoLine2[i], (timer/8)%2);
+            } else if ((zakoLine2[i].deathTimer >= 0) && (zakoLine2[i].deathTimer <= 4)) {
+                drawEnemyExplosion(zakoLine2[i]);
+                zakoLine2[i].deathTimer += 1;
+            }
+        }
+
+        for (int i = 0; i < 10; i++) {
+            // Enemy bullet drawing
+            if (i < 4) {
+                if (!(bossBullet[i].isMoving) && (bossLine[i].lives > 0)) {
+                    setBulletPos(&bossBullet[i], bossLine[i].hitbox.x + 7, bossLine[i].hitbox.y);
+                } else if (bossBullet[i].isMoving) {
+                    updateBulletPos(&bossBullet[i]);
+                    drawBullet(bossBullet[i]);
+                }
+            }
+
+            if (i < 8) {
+                if (!(goeiBullet1[i].isMoving) && (goeiLine1[i].lives > 0)) {
+                    setBulletPos(&goeiBullet1[i], goeiLine1[i].hitbox.x + 7, goeiLine1[i].hitbox.y);
+                } else if (goeiBullet1[i].isMoving) {
+                    updateBulletPos(&goeiBullet1[i]);
+                    drawBullet(goeiBullet1[i]);
+                }
+
+                if (!(goeiBullet2[i].isMoving) && (goeiLine2[i].lives > 0)) {
+                    setBulletPos(&goeiBullet2[i], goeiLine2[i].hitbox.x + 7, goeiLine2[i].hitbox.y);
+                } else if (goeiBullet2[i].isMoving) {
+                    updateBulletPos(&goeiBullet2[i]);
+                    drawBullet(goeiBullet2[i]);
+                }
+            }
+
+            if (!(zakoBullet1[i].isMoving) && (zakoLine1[i].lives > 0)) {
+                setBulletPos(&zakoBullet1[i], zakoLine1[i].hitbox.x + 7, zakoLine1[i].hitbox.y);
+            } else if (zakoBullet1[i].isMoving) {
+                updateBulletPos(&zakoBullet1[i]);
+                drawBullet(zakoBullet1[i]);
+            }
+
+            if (!(zakoBullet2[i].isMoving) && (zakoLine2[i].lives > 0)) {
+                setBulletPos(&zakoBullet2[i], zakoLine2[i].hitbox.x + 7, zakoLine2[i].hitbox.y);
+            } else if (zakoBullet2[i].isMoving) {
+                updateBulletPos(&zakoBullet2[i]);
+                drawBullet(zakoBullet2[i]);
             }
         }
         
@@ -662,28 +1261,16 @@ int gameLoop() {
             drawBullet(playerBullet[1]);
         }
 
-        //stars
-        int tempOldPos;
-
-        for (int i = 0; i < 224; i++) {
-            // erase old star, draw new star
-            tempOldPos = (stars[0][i] - (2*stars[1][i]));
-
-            if ((tempOldPos >= 0) && (tempOldPos < 240)) {
-                plot_pixel(i,tempOldPos, 0);
-            }
-
-            if (stars[0][i] > 260) { // reset position after star passes screen
-                stars[0][i] = -740;
-            }
-
-            plot_pixel(i,stars[0][i], 0xFFFF);
-
-            stars[0][i] += stars[1][i]; // increment position by dy
+        if (player.lives > 0) {
+            // EXPLOSION ANIMATION HERE
+            drawObject(player, 1);
+        } else {
+            return 0; // PLAYER DEAD EXIT
         }
 
-        if (player.lives > 0) {
-            drawObject(player, 1);
+        if (remainingEnemies == 0) 
+        {
+            return 1;
         }
 
         timer = timer + 1;
@@ -701,7 +1288,22 @@ int gameLoop() {
         wait_for_vsync(status, frontBuffAddr); //wait for VGA vertical sync
         pixel_buffer_start = *backBuffAddr; // new back buffer
     }
+}
 
+void drawEnemyExplosion(gameObject object) {
+    for (int row = 0; row < 32; row++) {
+        for (int col = 0; col < 32; col++) {
+            plot_pixel(object.hitbox.x - 8 + row, object.hitbox.y - 8 + col, RED);//enemyExplode[object.deathTimer][row][col]);
+        }
+    }
+}
+
+void eraseOldEnemyExplode(gameObject object) {
+    for (int row = 0; row < 32; row++) {
+        for (int col = 0; col < 32; col++) {
+            plot_pixel(object.hitbox.x - 8 + row, object.hitbox.y - 8 + col, 0);
+        }
+    }
 }
 
 void initializeBossLine(gameObject* bossLine) {
@@ -744,6 +1346,9 @@ gameObject createObject(int length_, int height_)
     object.hitbox = createRect(0, 0, length_, height_, 0);
     object.lives = 0;
     object.pointValue = 0;
+    object.isAttacking = 0;
+    object.x_offset = 0;
+    object.deathTimer = -1;
     return object;
 }
 
@@ -815,7 +1420,7 @@ void eraseOldBullet(bullet* object) {
 void initializePlayer(gameObject* object)
 {   
     //set the player to have 3 lives
-    object->lives = 3;
+    object->lives = intLives;
     //player is WORTHLESS
     object->pointValue = 0;
     //player has no 0th sprite, fill with black (complete)
@@ -992,6 +1597,15 @@ void initializeBossGalaga(gameObject* object)
 {       
     //set the bossGalaga to have 2 lives
     object->lives = 2;
+
+    object->attackPattern[0] = -8;
+    object->attackPattern[1] = -4;
+    object->attackPattern[2] = -2;
+    object->attackPattern[3] = 0;
+    object->attackPattern[4] = 2;
+    object->attackPattern[5] = 4;
+    object->attackPattern[6] = 8;
+    object->attackPattern[7] = 4;
 
     object->pointValue = 200;
 
@@ -1187,6 +1801,15 @@ void initializeGoeiGalaga(gameObject* object)
     //set the goeiGalaga to have 1 life
     object->lives = 1;
 
+    object->attackPattern[0] = -8;
+    object->attackPattern[1] = -4;
+    object->attackPattern[2] = -2;
+    object->attackPattern[3] = 0;
+    object->attackPattern[4] = 2;
+    object->attackPattern[5] = 4;
+    object->attackPattern[6] = 8;
+    object->attackPattern[7] = 4;
+
     object->pointValue = 100;
 
     //0th sprite (complete)
@@ -1379,6 +2002,15 @@ void initializeZakoGalaga(gameObject* object)
 {   
     //set the zakoGalaga to have 1 life
     object->lives = 1;
+
+    object->attackPattern[0] = -8;
+    object->attackPattern[1] = -4;
+    object->attackPattern[2] = -2;
+    object->attackPattern[3] = 0;
+    object->attackPattern[4] = 2;
+    object->attackPattern[5] = 4;
+    object->attackPattern[6] = 8;
+    object->attackPattern[7] = 4;
 
     object->pointValue = 50;
 
@@ -1577,6 +2209,23 @@ void initializePlayerBullet(bullet* object) {
                              {0x0001, 0xF800, 0x0001},
                              {0x0001, 0xF800, 0x0001},
                              {0x0001, 0xF800, 0x0001}
+    };
+    for (int row = 0; row < object->height; row++) {
+        for (int col = 0; col < object->length; col++) {
+            object->sprite[row][col] = array[row][col];
+        }
+    }
+}
+
+void initializeEnemyBullet(bullet* object) {
+    short int array[8][3] = {{0x0001,  WHITE, 0x0001},
+                             {0x0001,  WHITE, 0x0001},
+                             {0x0001,  WHITE, 0x0001},
+                             {0x0001,  WHITE, 0x0001},
+                             {   RED,  WHITE,    RED},
+                             {   RED,    RED,    RED},
+                             {0x0001,    RED, 0x0001},
+                             {0x0001,    RED, 0x0001}
     };
     for (int row = 0; row < object->height; row++) {
         for (int col = 0; col < object->length; col++) {
