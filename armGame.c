@@ -1482,7 +1482,7 @@ void drawEnemyExplosion(gameObject object) {
 void drawSelfExplosion(gameObject object) {
     for (int row = 0; row < 32; row++) {
         for (int col = 0; col < 32; col++) {
-            plot_pixel(object.hitbox.x - 8 + row, object.hitbox.y - 8 + col, selfExplode[object.deathTimer][col][row]);
+            plot_pixel(object.hitbox.x - 8 + row, object.hitbox.y - 8 + col, selfExplode[object.deathTimer/4][col][row]);
         }
     }
 }
