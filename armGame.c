@@ -87,6 +87,7 @@ typedef struct bullet
     rect hitbox;
     short int sprite[8][3];
     bool isMoving;
+    int wasMoving;
 } bullet;
 
 //basic functions
@@ -806,11 +807,21 @@ int gameLoop() {
                     eraseOldBullet(&bossBullet[i]);
                 }
 
+                if (bossBullet[i].wasMoving > 0) {
+                    eraseOldBullet(&bossBullet[i]);
+                    bossBullet[i].wasMoving--;
+                }
+
                 if (y_outOfBounds(bossBullet[i].hitbox, 0, 239)) {
                     bossBullet[i].isMoving = FALSE;
                     bossBullet[i].hitbox.dy = 0;
                     bossBullet[i].hitbox.dx = 0;
-                    eraseOldBullet(&bossBullet[i]);
+                    bossBullet[i].wasMoving = 2;
+                } else if (x_outOfBounds(bossBullet[i].hitbox, -100, 224)) {
+                    bossBullet[i].isMoving = FALSE;
+                    bossBullet[i].hitbox.dy = 0;
+                    bossBullet[i].hitbox.dx = 0;
+                    bossBullet[i].wasMoving = 2;
                 }
 
                 if (bossLine[i].lives > 0) {
@@ -891,11 +902,21 @@ int gameLoop() {
                     eraseOldBullet(&goeiBullet1[i]);
                 }
 
+                if (goeiBullet1[i].wasMoving > 0) {
+                    eraseOldBullet(&goeiBullet1[i]);
+                    goeiBullet1[i].wasMoving--;
+                }
+
                 if (y_outOfBounds(goeiBullet1[i].hitbox, 0, 239)) {
                     goeiBullet1[i].isMoving = FALSE;
                     goeiBullet1[i].hitbox.dy = 0;
                     goeiBullet1[i].hitbox.dx = 0;
-                    eraseOldBullet(&goeiBullet1[i]);
+                    goeiBullet1[i].wasMoving = 2;
+                } else if (x_outOfBounds(goeiBullet1[i].hitbox, -100, 224)) {
+                    goeiBullet1[i].isMoving = FALSE;
+                    goeiBullet1[i].hitbox.dy = 0;
+                    goeiBullet1[i].hitbox.dx = 0;
+                    goeiBullet1[i].wasMoving = 2;
                 }
 
                 if (goeiLine1[i].lives > 0) {
@@ -968,13 +989,23 @@ int gameLoop() {
 
                 if (goeiBullet2[i].isMoving) {
                     eraseOldBullet(&goeiBullet2[i]);
-                }  
+                }
+
+                if (goeiBullet2[i].wasMoving > 0) {
+                    eraseOldBullet(&goeiBullet2[i]);
+                    goeiBullet2[i].wasMoving--;
+                }
 
                 if (y_outOfBounds(goeiBullet2[i].hitbox, 0, 239)) {
                     goeiBullet2[i].isMoving = FALSE;
                     goeiBullet2[i].hitbox.dy = 0;
                     goeiBullet2[i].hitbox.dx = 0;
-                    eraseOldBullet(&goeiBullet2[i]);
+                    goeiBullet2[i].wasMoving = 2;
+                } else if (x_outOfBounds(goeiBullet2[i].hitbox, -100, 224)) {
+                    goeiBullet2[i].isMoving = FALSE;
+                    goeiBullet2[i].hitbox.dy = 0;
+                    goeiBullet2[i].hitbox.dx = 0;
+                    goeiBullet2[i].wasMoving = 2;
                 }
 
                 if (goeiLine2[i].lives > 0) {
@@ -1050,11 +1081,21 @@ int gameLoop() {
                 eraseOldBullet(&zakoBullet1[i]);
             }
 
+            if (zakoBullet1[i].wasMoving > 0) {
+                eraseOldBullet(&zakoBullet1[i]);
+                zakoBullet1[i].wasMoving--;
+            }
+
             if (y_outOfBounds(zakoBullet1[i].hitbox, 0, 239)) {
                 zakoBullet1[i].isMoving = FALSE;
                 zakoBullet1[i].hitbox.dy = 0;
                 zakoBullet1[i].hitbox.dx = 0;
-                eraseOldBullet(&zakoBullet1[i]);
+                zakoBullet1[i].wasMoving = 2;
+            } else if (x_outOfBounds(zakoBullet1[i].hitbox, -100, 224)) {
+                zakoBullet1[i].isMoving = FALSE;
+                zakoBullet1[i].hitbox.dy = 0;
+                zakoBullet1[i].hitbox.dx = 0;
+                zakoBullet1[i].wasMoving = 2;
             }
 
             if (zakoLine1[i].lives > 0) { // determine zakoLines movement and death
@@ -1129,11 +1170,21 @@ int gameLoop() {
                 eraseOldBullet(&zakoBullet2[i]);
             }
 
+            if (zakoBullet2[i].wasMoving > 0) {
+                eraseOldBullet(&zakoBullet2[i]);
+                zakoBullet2[i].wasMoving--;
+            }
+
             if (y_outOfBounds(zakoBullet2[i].hitbox, 0, 239)) {
                 zakoBullet2[i].isMoving = FALSE;
                 zakoBullet2[i].hitbox.dy = 0;
                 zakoBullet2[i].hitbox.dx = 0;
-                eraseOldBullet(&zakoBullet2[i]);
+                zakoBullet2[i].wasMoving = 2;
+            } else if (x_outOfBounds(zakoBullet2[i].hitbox, -100, 224)) {
+                zakoBullet2[i].isMoving = FALSE;
+                zakoBullet2[i].hitbox.dy = 0;
+                zakoBullet2[i].hitbox.dx = 0;
+                zakoBullet2[i].wasMoving = 2;
             }
 
             if (zakoLine2[i].lives > 0) {
@@ -1387,6 +1438,7 @@ bullet createBullet(int length_, int height_) {
     object.height = height_;
     object.hitbox = createRect(0, 0, length_, height_, 0);
     object.isMoving = FALSE;
+    object.wasMoving = 0;
     return object;
 }
 
