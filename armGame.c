@@ -734,7 +734,7 @@ int gameLoop() {
         //stars
         int tempOldPos;
 
-        if ((player.deathTimer >= 0) && (player.deathTimer <= 5)) {
+        if ((player.deathTimer >= 0) && (player.deathTimer <= 9)) {
             eraseOldExplode(player);
         }
 
@@ -1434,13 +1434,13 @@ int gameLoop() {
             drawBullet(playerBullet[1]);
         }
 
-        if ((player.deathTimer >= 0) && (player.deathTimer <= 3)) {
+        if ((player.deathTimer >= 0) && (player.deathTimer <= 7)) {
             drawSelfExplosion(player);
             player.deathTimer += 1;
             player.hitbox.dx = 0; // stop motion
         } else if (player.lives > 0) {
             drawObject(player, 1);
-            if (player.deathTimer == 15) {
+            if (player.deathTimer == 30) {
                 player.deathTimer = -1;
             } else if (player.deathTimer >= 0) {
                 player.deathTimer += 1;
