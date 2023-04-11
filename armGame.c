@@ -676,7 +676,7 @@ int gameLoop() {
             byte3 = PS2data & 0xFF;
             
             // L and R arrow keys to set movement
-            if ((player.deathTimer >= 0) || (player.deathTimer <= 17) || ((byte2 == 0xF0) && (byte3 == 0x74)) || ((byte2 == 0xF0) && (byte3 == 0x6B))){
+            if (((player.deathTimer >= 0) && (player.deathTimer <= 17)) || ((byte2 == 0xF0) && (byte3 == 0x74)) || ((byte2 == 0xF0) && (byte3 == 0x6B))){
                 player.hitbox.dx = 0; //no movement on arrow key release
             } else if ((byte3 == 0x74)) {
                 player.hitbox.dx = 2;
