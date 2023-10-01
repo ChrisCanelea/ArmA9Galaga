@@ -1,5 +1,5 @@
 # ArmA9Galaga
-Galaga game in C/Assembly for the Arm A9 processor on the DE1-SoC board.
+Galaga game in C for the Arm A9 processor on the DE1-SoC board.
 Meant to be played with a PS/2 keyboard.
 Developed by Christian Canelea and Sebastian Sergnese
 
